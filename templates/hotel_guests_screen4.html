@@ -1,0 +1,563 @@
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+.shell{display:flex;min-height:820px;background:var(--color-background-tertiary);border-radius:var(--border-radius-lg);overflow:hidden;border:0.5px solid var(--color-border-tertiary);}
+.sidebar{width:200px;background:var(--color-background-primary);border-right:0.5px solid var(--color-border-tertiary);padding:20px 0;display:flex;flex-direction:column;flex-shrink:0;}
+.logo-wrap{padding:0 20px 20px;border-bottom:0.5px solid var(--color-border-tertiary);margin-bottom:12px;}
+.logo-text{font-size:16px;font-weight:500;color:var(--color-text-primary);}
+.logo-sub{font-size:11px;color:var(--color-text-secondary);margin-top:2px;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 20px;font-size:13px;color:var(--color-text-secondary);cursor:pointer;}
+.nav-item.active{color:#185FA5;background:#E6F1FB;border-right:2px solid #185FA5;font-weight:500;}
+.nav-item i{font-size:16px;}
+.nav-sec{font-size:10px;color:var(--color-text-tertiary);padding:12px 20px 4px;letter-spacing:0.08em;text-transform:uppercase;}
+.main{flex:1;padding:20px;display:flex;flex-direction:column;gap:16px;overflow:auto;}
+.topbar{display:flex;justify-content:space-between;align-items:center;}
+.page-title{font-size:18px;font-weight:500;color:var(--color-text-primary);}
+.page-sub{font-size:12px;color:var(--color-text-secondary);}
+.avatar-top{width:32px;height:32px;border-radius:50%;background:#B5D4F4;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;color:#185FA5;}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+.stat-card{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:14px;}
+.stat-label{font-size:11px;color:var(--color-text-secondary);margin-bottom:6px;display:flex;align-items:center;gap:6px;}
+.stat-value{font-size:22px;font-weight:500;color:var(--color-text-primary);}
+.stat-sub{font-size:11px;margin-top:3px;color:var(--color-text-secondary);}
+.stat-sub.up{color:#3B6D11;}
+.two-col{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:14px;}
+.card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:16px;}
+.card-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px;}
+.card-title{font-size:13px;font-weight:500;color:var(--color-text-primary);}
+.btn-primary{background:#185FA5;color:#fff;border:none;border-radius:var(--border-radius-md);padding:7px 14px;font-size:12px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px;height:32px;}
+.btn-outline{background:var(--color-background-primary);color:var(--color-text-primary);border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);padding:7px 14px;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:6px;height:32px;}
+.filters{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+.filters input,.filters select{font-size:12px;padding:6px 10px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-tertiary);background:var(--color-background-secondary);color:var(--color-text-primary);height:32px;}
+.tbl{width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed;}
+.tbl th{text-align:left;font-size:10px;font-weight:500;color:var(--color-text-secondary);padding:0 8px 8px;border-bottom:0.5px solid var(--color-border-tertiary);}
+.tbl td{padding:9px 8px;border-bottom:0.5px solid var(--color-border-tertiary);color:var(--color-text-primary);vertical-align:middle;}
+.tbl tr:last-child td{border-bottom:none;}
+.tbl tr:hover td{background:var(--color-background-secondary);}
+.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:500;}
+.b-repeat{background:#C0DD97;color:#27500A;}
+.b-new{background:#B5D4F4;color:#0C447C;}
+.b-vip{background:#CECBF6;color:#3C3489;}
+.icon-btn{background:none;border:none;cursor:pointer;color:var(--color-text-secondary);font-size:15px;padding:3px;}
+.icon-btn:hover{color:#185FA5;}
+.icon-btn.del:hover{color:#A32D2D;}
+.av{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:500;flex-shrink:0;}
+.guest-info{display:flex;align-items:center;gap:8px;}
+.profile-av{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:500;flex-shrink:0;}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.form-group{display:flex;flex-direction:column;gap:4px;}
+.form-group label{font-size:11px;color:var(--color-text-secondary);font-weight:500;}
+.form-group input,.form-group select{font-size:12px;padding:7px 10px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-tertiary);background:var(--color-background-secondary);color:var(--color-text-primary);}
+.form-section{font-size:11px;font-weight:500;color:var(--color-text-secondary);margin:10px 0 8px;padding-bottom:4px;border-bottom:0.5px solid var(--color-border-tertiary);text-transform:uppercase;letter-spacing:0.06em;}
+.info-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:0.5px solid var(--color-border-tertiary);font-size:12px;}
+.info-row:last-child{border-bottom:none;}
+.info-label{color:var(--color-text-secondary);display:flex;align-items:center;gap:6px;}
+.info-val{color:var(--color-text-primary);font-weight:500;text-align:right;}
+.stay-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:0.5px solid var(--color-border-tertiary);font-size:12px;}
+.stay-row:last-child{border-bottom:none;}
+.month-bar-wrap{display:flex;flex-direction:column;gap:6px;}
+.month-bar-row{display:flex;align-items:center;gap:8px;font-size:11px;}
+.month-label{width:28px;color:var(--color-text-secondary);flex-shrink:0;}
+.bar-track{flex:1;background:var(--color-background-secondary);border-radius:4px;height:10px;}
+.bar-fill{height:10px;border-radius:4px;background:#378ADD;}
+.bar-val{width:28px;text-align:right;color:var(--color-text-secondary);flex-shrink:0;}
+
+@media (max-width:1100px){
+  .stats-grid{grid-template-columns:repeat(2,1fr);}
+  .two-col{grid-template-columns:1fr;}
+}
+
+@media (max-width:768px){
+  .shell{flex-direction:column;}
+  .sidebar{width:100%;}
+  .stats-grid{grid-template-columns:1fr;}
+  .form-grid{grid-template-columns:1fr;}
+}
+</style>
+
+<div class="shell">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="logo-wrap">
+      <div class="logo-text">
+        <i class="ti ti-building" style="font-size:16px;margin-right:6px;"></i>
+        StayDesk
+      </div>
+      <div class="logo-sub">Hotel Management</div>
+    </div>
+
+    <div class="nav-sec">Main</div>
+
+    <div class="nav-item {% if active_screen == 'dashboard' %}active{% endif %}"
+         onclick="location.href='/'">
+      <i class="ti ti-layout-dashboard"></i>
+      Dashboard
+    </div>
+
+    <div class="nav-item {% if active_screen == 'reservations' %}active{% endif %}"
+         onclick="location.href='/reservations'">
+      <i class="ti ti-calendar"></i>
+      Reservations
+    </div>
+
+    <div class="nav-item {% if active_screen == 'rooms' %}active{% endif %}"
+         onclick="location.href='/rooms'">
+      <i class="ti ti-door"></i>
+      Rooms
+    </div>
+
+    <div class="nav-item {% if active_screen == 'guests' %}active{% endif %}"
+         onclick="location.href='/guests'">
+      <i class="ti ti-users"></i>
+      Guests
+    </div>
+
+    <div class="nav-sec">Finance</div>
+
+    <div class="nav-item">
+      <i class="ti ti-receipt"></i>
+      Invoices
+    </div>
+
+    <div class="nav-item">
+      <i class="ti ti-tag"></i>
+      Rates
+    </div>
+
+    <div class="nav-sec">Operations</div>
+
+    <div class="nav-item">
+      <i class="ti ti-tools"></i>
+      Services
+    </div>
+
+    <div class="nav-item">
+      <i class="ti ti-star"></i>
+      Extras
+    </div>
+
+    <div style="margin-top:auto;padding:0 20px;">
+      <div class="nav-item" style="padding:9px 0;">
+        <i class="ti ti-settings"></i>
+        Settings
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- TOPBAR -->
+    <div class="topbar">
+      <div>
+        <div class="page-title">Guests</div>
+        <div class="page-sub">{{ current_date }}</div>
+      </div>
+
+      <div style="display:flex;gap:8px;align-items:center;">
+        <div style="position:relative;">
+          <i class="ti ti-bell" style="font-size:18px;color:var(--color-text-secondary);"></i>
+          <span style="position:absolute;top:-4px;right:-4px;background:#E24B4A;color:#fff;font-size:8px;border-radius:50%;width:13px;height:13px;display:flex;align-items:center;justify-content:center;">
+            3
+          </span>
+        </div>
+
+        <div class="avatar-top">AM</div>
+      </div>
+    </div>
+
+    <!-- STATS -->
+    <div class="stats-grid">
+
+      <div class="stat-card">
+        <div class="stat-label">
+          <i class="ti ti-users" style="color:#185FA5;"></i>
+          Total guests
+        </div>
+
+        <div class="stat-value">
+          {{ stats.total_guests or 0 }}
+        </div>
+
+        <div class="stat-sub">All time records</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-label">
+          <i class="ti ti-refresh" style="color:#3B6D11;"></i>
+          Repeat guests
+        </div>
+
+        <div class="stat-value">
+          {{ stats.repeat_guests or 0 }}
+        </div>
+
+        <div class="stat-sub up">
+          {{ stats.repeat_percentage or 0 }}% of total
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-label">
+          <i class="ti ti-user-plus" style="color:#534AB7;"></i>
+          New this month
+        </div>
+
+        <div class="stat-value">
+          {{ stats.new_guests or 0 }}
+        </div>
+
+        <div class="stat-sub">Since this month</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-label">
+          <i class="ti ti-star" style="color:#854F0B;"></i>
+          VIP guests
+        </div>
+
+        <div class="stat-value">
+          {{ stats.vip_guests or 0 }}
+        </div>
+
+        <div class="stat-sub">5+ stays recorded</div>
+      </div>
+
+    </div>
+
+    <!-- TABLE -->
+    <div class="card">
+
+      <div class="card-head">
+
+        <div class="card-title">Guest directory</div>
+
+        <form method="GET" action="/guests" class="filters">
+
+          <input type="text"
+                 name="search"
+                 placeholder="Search name / email"
+                 value="{{ request.args.get('search', '') }}"
+                 style="width:190px;">
+
+          <select name="guest_type" onchange="this.form.submit()" style="width:120px;">
+            <option value="">All guests</option>
+            <option value="repeat"
+              {% if request.args.get('guest_type') == 'repeat' %}selected{% endif %}>
+              Repeat
+            </option>
+            <option value="new"
+              {% if request.args.get('guest_type') == 'new' %}selected{% endif %}>
+              New
+            </option>
+            <option value="vip"
+              {% if request.args.get('guest_type') == 'vip' %}selected{% endif %}>
+              VIP
+            </option>
+          </select>
+
+          <select name="id_type" onchange="this.form.submit()" style="width:110px;">
+            <option value="">All ID types</option>
+            <option value="CNIC">CNIC</option>
+            <option value="Passport">Passport</option>
+            <option value="Driving licence">Driving licence</option>
+          </select>
+
+          <button type="submit" class="btn-primary">
+            <i class="ti ti-search"></i>
+            Search
+          </button>
+
+        </form>
+
+      </div>
+
+      <table class="tbl">
+
+        <thead>
+          <tr>
+            <th>Guest</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th>ID type</th>
+            <th>ID number</th>
+            <th>Total stays</th>
+            <th>Member since</th>
+            <th>Type</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+
+        <tbody>
+
+          {% if guests %}
+            {% for guest in guests %}
+
+            <tr>
+
+              <td>
+                <div class="guest-info">
+
+                  <div class="av" style="background:#B5D4F4;color:#0C447C;">
+                    {{ guest.first_name[0] if guest.first_name else '' }}{{ guest.last_name[0] if guest.last_name else '' }}
+                  </div>
+
+                  <div style="font-weight:500;">
+                    {{ guest.first_name }} {{ guest.last_name }}
+                  </div>
+
+                </div>
+              </td>
+
+              <td style="color:#185FA5;">
+                {{ guest.email }}
+              </td>
+
+              <td>
+                {{ guest.phone }}
+              </td>
+
+              <td>
+                {{ guest.id_type }}
+              </td>
+
+              <td style="font-family:monospace;font-size:11px;">
+                {{ guest.id_number }}
+              </td>
+
+              <td style="text-align:center;font-weight:500;">
+                {{ guest.total_stays or 0 }}
+              </td>
+
+              <td>
+                {{ guest.created_at.strftime('%b %Y') if guest.created_at else '-' }}
+              </td>
+
+              <td>
+
+                {% if guest.total_stays >= 5 %}
+                  <span class="badge b-vip">VIP</span>
+
+                {% elif guest.total_stays >= 2 %}
+                  <span class="badge b-repeat">Repeat</span>
+
+                {% else %}
+                  <span class="badge b-new">New</span>
+                {% endif %}
+
+              </td>
+
+              <td>
+
+                <div style="display:flex;gap:4px;">
+
+                  <a href="/guests/{{ guest.customer_id }}" class="icon-btn">
+                    <i class="ti ti-eye"></i>
+                  </a>
+
+                  <a href="/guests/edit/{{ guest.customer_id }}" class="icon-btn">
+                    <i class="ti ti-edit"></i>
+                  </a>
+
+                  <form method="POST"
+                        action="/guests/delete/{{ guest.customer_id }}"
+                        style="display:inline;"
+                        onsubmit="return confirm('Delete this guest?');">
+
+                    <button type="submit" class="icon-btn del">
+                      <i class="ti ti-trash"></i>
+                    </button>
+
+                  </form>
+
+                </div>
+
+              </td>
+
+            </tr>
+
+            {% endfor %}
+
+          {% else %}
+
+            <tr>
+              <td colspan="9" style="text-align:center;padding:20px;color:var(--color-text-secondary);">
+                No guests found.
+              </td>
+            </tr>
+
+          {% endif %}
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+    <!-- LOWER SECTION -->
+    <div class="two-col">
+
+      <!-- PROFILE -->
+      <div class="card">
+
+        <div class="card-head">
+          <div class="card-title">
+            <i class="ti ti-user" style="margin-right:6px;color:#185FA5;"></i>
+            Guest profile
+          </div>
+        </div>
+
+        {% if selected_guest %}
+
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;padding-bottom:14px;border-bottom:0.5px solid var(--color-border-tertiary);">
+
+          <div class="profile-av" style="background:#C0DD97;color:#27500A;">
+            {{ selected_guest.first_name[0] if selected_guest.first_name else '' }}{{ selected_guest.last_name[0] if selected_guest.last_name else '' }}
+          </div>
+
+          <div>
+            <div style="font-weight:500;font-size:15px;">
+              {{ selected_guest.first_name }} {{ selected_guest.last_name }}
+            </div>
+
+            <div style="font-size:11px;color:var(--color-text-secondary);">
+              Customer since
+              {{ selected_guest.created_at.strftime('%B %Y') if selected_guest.created_at else '-' }}
+            </div>
+
+            <div style="font-size:11px;color:var(--color-text-secondary);">
+              {{ selected_guest.total_stays or 0 }} stays
+            </div>
+          </div>
+
+        </div>
+
+        <div class="form-section">Contact details</div>
+
+        <div class="info-row">
+          <span class="info-label">
+            <i class="ti ti-mail"></i>
+            Email
+          </span>
+
+          <span class="info-val" style="color:#185FA5;">
+            {{ selected_guest.email }}
+          </span>
+        </div>
+
+        <div class="info-row">
+          <span class="info-label">
+            <i class="ti ti-phone"></i>
+            Phone
+          </span>
+
+          <span class="info-val">
+            {{ selected_guest.phone }}
+          </span>
+        </div>
+
+        <div class="info-row">
+          <span class="info-label">
+            <i class="ti ti-id-badge"></i>
+            ID type
+          </span>
+
+          <span class="info-val">
+            {{ selected_guest.id_type }}
+          </span>
+        </div>
+
+        <div class="info-row">
+          <span class="info-label">
+            <i class="ti ti-hash"></i>
+            ID number
+          </span>
+
+          <span class="info-val">
+            {{ selected_guest.id_number }}
+          </span>
+        </div>
+
+        {% else %}
+
+        <div style="padding:30px;text-align:center;color:var(--color-text-secondary);">
+          Select a guest to view profile details.
+        </div>
+
+        {% endif %}
+
+      </div>
+
+      <!-- ADD GUEST -->
+      <div class="card">
+
+        <div class="card-head">
+          <div class="card-title">
+            <i class="ti ti-user-plus" style="margin-right:6px;color:#185FA5;"></i>
+            Add new guest
+          </div>
+        </div>
+
+        <form method="POST" action="/guests/add">
+
+          <div class="form-grid">
+
+            <div class="form-group">
+              <label>First name</label>
+              <input type="text" name="first_name" required>
+            </div>
+
+            <div class="form-group">
+              <label>Last name</label>
+              <input type="text" name="last_name" required>
+            </div>
+
+            <div class="form-group">
+              <label>Email</label>
+              <input type="email" name="email">
+            </div>
+
+            <div class="form-group">
+              <label>Phone</label>
+              <input type="text" name="phone">
+            </div>
+
+            <div class="form-group">
+              <label>ID type</label>
+
+              <select name="id_type">
+                <option value="CNIC">CNIC</option>
+                <option value="Passport">Passport</option>
+                <option value="Driving licence">Driving licence</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>ID number</label>
+              <input type="text" name="id_number">
+            </div>
+
+          </div>
+
+          <div style="margin-top:12px;">
+
+            <button type="submit"
+                    class="btn-primary"
+                    style="width:100%;justify-content:center;">
+
+              <i class="ti ti-check"></i>
+              Save guest
+
+            </button>
+
+          </div>
+
+        </form>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>

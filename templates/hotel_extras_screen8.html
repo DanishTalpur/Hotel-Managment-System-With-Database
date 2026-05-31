@@ -1,0 +1,902 @@
+<style>
+*{
+  box-sizing:border-box;
+  margin:0;
+  padding:0;
+}
+
+.shell{
+  display:flex;
+  min-height:740px;
+  background:var(--color-background-tertiary);
+  border-radius:var(--border-radius-lg);
+  overflow:hidden;
+  border:0.5px solid var(--color-border-tertiary);
+}
+
+/* SIDEBAR */
+
+.sidebar{
+  width:220px;
+  background:var(--color-background-primary);
+  border-right:0.5px solid var(--color-border-tertiary);
+  padding:20px 0;
+  display:flex;
+  flex-direction:column;
+  flex-shrink:0;
+}
+
+.logo-wrap{
+  padding:0 20px 20px;
+  border-bottom:0.5px solid var(--color-border-tertiary);
+  margin-bottom:12px;
+}
+
+.logo-text{
+  font-size:16px;
+  font-weight:600;
+  color:var(--color-text-primary);
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+
+.logo-sub{
+  font-size:11px;
+  color:var(--color-text-secondary);
+  margin-top:2px;
+}
+
+.nav-sec{
+  font-size:10px;
+  color:var(--color-text-tertiary);
+  padding:14px 20px 6px;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+}
+
+.nav-item{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:10px 20px;
+  font-size:13px;
+  color:var(--color-text-secondary);
+  cursor:pointer;
+  transition:.2s;
+}
+
+.nav-item:hover{
+  background:var(--color-background-secondary);
+  color:var(--color-text-primary);
+}
+
+.nav-item.active{
+  color:#185FA5;
+  background:#E6F1FB;
+  border-right:2px solid #185FA5;
+  font-weight:600;
+}
+
+.nav-item i{
+  font-size:16px;
+}
+
+/* MAIN */
+
+.main{
+  flex:1;
+  padding:20px;
+  display:flex;
+  flex-direction:column;
+  gap:16px;
+  overflow:auto;
+}
+
+.topbar{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:14px;
+}
+
+.page-title{
+  font-size:20px;
+  font-weight:600;
+  color:var(--color-text-primary);
+}
+
+.page-sub{
+  font-size:12px;
+  color:var(--color-text-secondary);
+  margin-top:2px;
+}
+
+.top-actions{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.notification{
+  position:relative;
+  width:34px;
+  height:34px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  background:var(--color-background-secondary);
+  color:var(--color-text-secondary);
+}
+
+.notification-count{
+  position:absolute;
+  top:-2px;
+  right:-2px;
+  background:#E24B4A;
+  color:#fff;
+  font-size:8px;
+  border-radius:50%;
+  width:14px;
+  height:14px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.avatar-top{
+  width:34px;
+  height:34px;
+  border-radius:50%;
+  background:#B5D4F4;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:11px;
+  font-weight:600;
+  color:#185FA5;
+}
+
+/* STATS */
+
+.stats-grid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:12px;
+}
+
+.stat-card{
+  background:var(--color-background-primary);
+  border:0.5px solid var(--color-border-tertiary);
+  border-radius:var(--border-radius-lg);
+  padding:16px;
+}
+
+.stat-label{
+  font-size:11px;
+  color:var(--color-text-secondary);
+  margin-bottom:8px;
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+
+.stat-value{
+  font-size:24px;
+  font-weight:600;
+  color:var(--color-text-primary);
+}
+
+.stat-sub{
+  font-size:11px;
+  margin-top:4px;
+  color:var(--color-text-secondary);
+}
+
+/* LAYOUT */
+
+.two-col{
+  display:grid;
+  grid-template-columns:minmax(0,1.65fr) minmax(320px,1fr);
+  gap:14px;
+}
+
+.stack{
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+}
+
+/* CARDS */
+
+.card{
+  background:var(--color-background-primary);
+  border:0.5px solid var(--color-border-tertiary);
+  border-radius:var(--border-radius-lg);
+  padding:16px;
+}
+
+.card-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  margin-bottom:14px;
+  flex-wrap:wrap;
+}
+
+.card-title{
+  font-size:13px;
+  font-weight:600;
+  color:var(--color-text-primary);
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+
+/* BUTTONS */
+
+.btn-primary,
+.btn-danger{
+  border:none;
+  border-radius:var(--border-radius-md);
+  padding:8px 14px;
+  font-size:12px;
+  font-weight:600;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  height:34px;
+  transition:.2s;
+}
+
+.btn-primary{
+  background:#185FA5;
+  color:#fff;
+}
+
+.btn-primary:hover{
+  background:#0E4F8F;
+}
+
+.btn-danger{
+  background:#A32D2D;
+  color:#fff;
+}
+
+.btn-danger:hover{
+  background:#8C2020;
+}
+
+/* EXTRAS GRID */
+
+.extras-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+
+.extra-card{
+  background:var(--color-background-secondary);
+  border:0.5px solid transparent;
+  border-radius:var(--border-radius-md);
+  padding:14px;
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:10px;
+  transition:.2s;
+}
+
+.extra-card:hover{
+  border-color:#185FA5;
+  transform:translateY(-1px);
+}
+
+.extra-title{
+  font-size:12px;
+  font-weight:600;
+  color:var(--color-text-primary);
+  margin-bottom:3px;
+}
+
+.extra-price{
+  font-size:11px;
+  color:var(--color-text-secondary);
+}
+
+.extra-desc{
+  font-size:10px;
+  color:var(--color-text-tertiary);
+  margin-top:5px;
+  line-height:1.4;
+}
+
+.extra-actions{
+  display:flex;
+  gap:2px;
+}
+
+.icon-btn{
+  width:28px;
+  height:28px;
+  border:none;
+  border-radius:8px;
+  background:transparent;
+  cursor:pointer;
+  color:var(--color-text-secondary);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  transition:.2s;
+}
+
+.icon-btn:hover{
+  background:#E6F1FB;
+  color:#185FA5;
+}
+
+.icon-btn.del:hover{
+  background:#FCE9E9;
+  color:#A32D2D;
+}
+
+/* FORM */
+
+.form-section{
+  font-size:11px;
+  font-weight:600;
+  color:var(--color-text-secondary);
+  margin:10px 0 8px;
+  padding-bottom:5px;
+  border-bottom:0.5px solid var(--color-border-tertiary);
+  text-transform:uppercase;
+  letter-spacing:.06em;
+}
+
+.form-group{
+  display:flex;
+  flex-direction:column;
+  gap:5px;
+  margin-bottom:12px;
+}
+
+.form-group label{
+  font-size:11px;
+  color:var(--color-text-secondary);
+  font-weight:600;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select{
+  width:100%;
+  font-size:12px;
+  padding:9px 10px;
+  border-radius:var(--border-radius-md);
+  border:0.5px solid var(--color-border-tertiary);
+  background:var(--color-background-secondary);
+  color:var(--color-text-primary);
+  outline:none;
+}
+
+.form-group textarea{
+  resize:vertical;
+  min-height:70px;
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus{
+  border-color:#185FA5;
+  background:var(--color-background-primary);
+}
+
+.btn-row{
+  display:flex;
+  gap:8px;
+  margin-top:4px;
+}
+
+/* USAGE */
+
+.usage-list{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+
+.usage-row{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.usage-label{
+  flex:1;
+  font-size:12px;
+  color:var(--color-text-primary);
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+.bar-track{
+  width:110px;
+  height:8px;
+  border-radius:999px;
+  background:var(--color-background-secondary);
+  overflow:hidden;
+}
+
+.bar-fill{
+  height:100%;
+  border-radius:999px;
+  background:#378ADD;
+}
+
+.usage-count{
+  width:32px;
+  text-align:right;
+  font-size:11px;
+  color:var(--color-text-secondary);
+}
+
+/* RESPONSIVE */
+
+@media (max-width:1200px){
+
+  .stats-grid{
+    grid-template-columns:repeat(2,1fr);
+  }
+
+  .two-col{
+    grid-template-columns:1fr;
+  }
+}
+
+@media (max-width:820px){
+
+  .shell{
+    flex-direction:column;
+  }
+
+  .sidebar{
+    width:100%;
+  }
+
+  .extras-grid{
+    grid-template-columns:1fr;
+  }
+
+  .stats-grid{
+    grid-template-columns:1fr;
+  }
+}
+</style>
+
+<div class="shell">
+
+  <!-- SIDEBAR -->
+
+  <div class="sidebar">
+
+    <div class="logo-wrap">
+      <div class="logo-text">
+        <i class="ti ti-building"></i>
+        StayDesk
+      </div>
+      <div class="logo-sub">Hotel Management</div>
+    </div>
+
+    <div class="nav-sec">Main</div>
+
+    <div class="nav-item">
+      <i class="ti ti-layout-dashboard"></i>
+      Dashboard
+    </div>
+
+    <div class="nav-item">
+      <i class="ti ti-calendar"></i>
+      Reservations
+    </div>
+
+    <div class="nav-item">
+      <i class="ti ti-door"></i>
+      Rooms
+    </div>
+
+    <div class="nav-item">
+      <i class="ti ti-users"></i>
+      Guests
+    </div>
+
+    <div class="nav-sec">Finance</div>
+
+    <div class="nav-item">
+      <i class="ti ti-receipt"></i>
+      Invoices
+    </div>
+
+    <div class="nav-item">
+      <i class="ti ti-tag"></i>
+      Rates
+    </div>
+
+    <div class="nav-sec">Operations</div>
+
+    <div class="nav-item">
+      <i class="ti ti-tools"></i>
+      Services
+    </div>
+
+    <div class="nav-item active">
+      <i class="ti ti-star"></i>
+      Extras
+    </div>
+
+    <div style="margin-top:auto;padding:0 20px;">
+      <div class="nav-item" style="padding:10px 0;">
+        <i class="ti ti-settings"></i>
+        Settings
+      </div>
+    </div>
+
+  </div>
+
+  <!-- MAIN -->
+
+  <div class="main">
+
+    <!-- TOPBAR -->
+
+    <div class="topbar">
+
+      <div>
+        <div class="page-title">Extras</div>
+        <div class="page-sub">Saturday, 23 May 2026</div>
+      </div>
+
+      <div class="top-actions">
+
+        <div class="notification">
+          <i class="ti ti-bell"></i>
+          <span class="notification-count">3</span>
+        </div>
+
+        <div class="avatar-top">AM</div>
+
+      </div>
+
+    </div>
+
+    <!-- STATS -->
+
+    <div class="stats-grid">
+
+      <div class="stat-card">
+        <div class="stat-label">
+          <i class="ti ti-star" style="color:#185FA5;"></i>
+          Total extras
+        </div>
+        <div class="stat-value">9</div>
+        <div class="stat-sub">Available add-ons</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-label">
+          <i class="ti ti-shopping-cart" style="color:#3B6D11;"></i>
+          Booked this month
+        </div>
+        <div class="stat-value">87</div>
+        <div class="stat-sub">Across all bookings</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-label">
+          <i class="ti ti-trending-up" style="color:#534AB7;"></i>
+          Most popular
+        </div>
+        <div class="stat-value" style="font-size:15px;">
+          Internet access
+        </div>
+        <div class="stat-sub">42 times this month</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-label">
+          <i class="ti ti-cash" style="color:#854F0B;"></i>
+          Extras revenue
+        </div>
+        <div class="stat-value">$1,840</div>
+        <div class="stat-sub">This month</div>
+      </div>
+
+    </div>
+
+    <!-- CONTENT -->
+
+    <div class="two-col">
+
+      <!-- LEFT -->
+
+      <div class="stack">
+
+        <div class="card">
+
+          <div class="card-head">
+
+            <div class="card-title">
+              <i class="ti ti-star"></i>
+              All extras
+            </div>
+
+            <button class="btn-primary">
+              <i class="ti ti-plus"></i>
+              Add extra
+            </button>
+
+          </div>
+
+          <div class="extras-grid">
+
+            <div class="extra-card">
+              <div>
+                <div class="extra-title">Internet access</div>
+                <div class="extra-price">$10.00 / stay</div>
+                <div class="extra-desc">
+                  High-speed premium WiFi for all devices.
+                </div>
+              </div>
+              <div class="extra-actions">
+                <button class="icon-btn"><i class="ti ti-edit"></i></button>
+                <button class="icon-btn del"><i class="ti ti-trash"></i></button>
+              </div>
+            </div>
+
+            <div class="extra-card">
+              <div>
+                <div class="extra-title">Extra bed</div>
+                <div class="extra-price">$35.00 / night</div>
+                <div class="extra-desc">
+                  Foldable additional bed setup for guests.
+                </div>
+              </div>
+              <div class="extra-actions">
+                <button class="icon-btn"><i class="ti ti-edit"></i></button>
+                <button class="icon-btn del"><i class="ti ti-trash"></i></button>
+              </div>
+            </div>
+
+            <div class="extra-card">
+              <div>
+                <div class="extra-title">Fruit basket</div>
+                <div class="extra-price">$15.00 / item</div>
+                <div class="extra-desc">
+                  Fresh seasonal fruits delivered to the room.
+                </div>
+              </div>
+              <div class="extra-actions">
+                <button class="icon-btn"><i class="ti ti-edit"></i></button>
+                <button class="icon-btn del"><i class="ti ti-trash"></i></button>
+              </div>
+            </div>
+
+            <div class="extra-card">
+              <div>
+                <div class="extra-title">Airport transfer</div>
+                <div class="extra-price">$50.00 / trip</div>
+                <div class="extra-desc">
+                  Private pickup and drop-off service.
+                </div>
+              </div>
+              <div class="extra-actions">
+                <button class="icon-btn"><i class="ti ti-edit"></i></button>
+                <button class="icon-btn del"><i class="ti ti-trash"></i></button>
+              </div>
+            </div>
+
+            <div class="extra-card">
+              <div>
+                <div class="extra-title">Baby cot</div>
+                <div class="extra-price">$20.00 / stay</div>
+                <div class="extra-desc">
+                  Comfortable infant cot with bedding included.
+                </div>
+              </div>
+              <div class="extra-actions">
+                <button class="icon-btn"><i class="ti ti-edit"></i></button>
+                <button class="icon-btn del"><i class="ti ti-trash"></i></button>
+              </div>
+            </div>
+
+            <div class="extra-card">
+              <div>
+                <div class="extra-title">Flowers & decoration</div>
+                <div class="extra-price">$40.00 / item</div>
+                <div class="extra-desc">
+                  Romantic room decoration and flower setup.
+                </div>
+              </div>
+              <div class="extra-actions">
+                <button class="icon-btn"><i class="ti ti-edit"></i></button>
+                <button class="icon-btn del"><i class="ti ti-trash"></i></button>
+              </div>
+            </div>
+
+            <div class="extra-card">
+              <div>
+                <div class="extra-title">Late checkout</div>
+                <div class="extra-price">$25.00 / request</div>
+                <div class="extra-desc">
+                  Extend checkout timing based on availability.
+                </div>
+              </div>
+              <div class="extra-actions">
+                <button class="icon-btn"><i class="ti ti-edit"></i></button>
+                <button class="icon-btn del"><i class="ti ti-trash"></i></button>
+              </div>
+            </div>
+
+            <div class="extra-card">
+              <div>
+                <div class="extra-title">Bottle of wine</div>
+                <div class="extra-price">$30.00 / item</div>
+                <div class="extra-desc">
+                  Premium red or white wine served chilled.
+                </div>
+              </div>
+              <div class="extra-actions">
+                <button class="icon-btn"><i class="ti ti-edit"></i></button>
+                <button class="icon-btn del"><i class="ti ti-trash"></i></button>
+              </div>
+            </div>
+
+            <div class="extra-card">
+              <div>
+                <div class="extra-title">Parking space</div>
+                <div class="extra-price">$12.00 / day</div>
+                <div class="extra-desc">
+                  Reserved secured parking inside premises.
+                </div>
+              </div>
+              <div class="extra-actions">
+                <button class="icon-btn"><i class="ti ti-edit"></i></button>
+                <button class="icon-btn del"><i class="ti ti-trash"></i></button>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- RIGHT -->
+
+      <div class="stack">
+
+        <div class="card">
+
+          <div class="card-head">
+            <div class="card-title">
+              <i class="ti ti-plus" style="color:#185FA5;"></i>
+              Add / edit extra
+            </div>
+          </div>
+
+          <div class="form-section">Extra details</div>
+
+          <div class="form-group">
+            <label>Extra name</label>
+            <input type="text" placeholder="e.g. Fruit basket">
+          </div>
+
+          <div class="form-group">
+            <label>Price ($)</label>
+            <input type="number" placeholder="e.g. 15.00">
+          </div>
+
+          <div class="form-group">
+            <label>Billing type</label>
+            <select>
+              <option>Per stay</option>
+              <option>Per night</option>
+              <option>Per item</option>
+              <option>Per request</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Description</label>
+            <textarea placeholder="Brief description..."></textarea>
+          </div>
+
+          <div class="btn-row">
+            <button class="btn-primary" style="flex:1;">
+              <i class="ti ti-check"></i>
+              Save extra
+            </button>
+
+            <button class="btn-danger" style="flex:1;">
+              <i class="ti ti-trash"></i>
+              Delete
+            </button>
+          </div>
+
+        </div>
+
+        <div class="card">
+
+          <div class="card-head">
+            <div class="card-title">
+              <i class="ti ti-chart-bar" style="color:#185FA5;"></i>
+              Usage this month
+            </div>
+          </div>
+
+          <div class="usage-list">
+
+            <div class="usage-row">
+              <span class="usage-label">Internet access</span>
+              <div class="bar-track">
+                <div class="bar-fill" style="width:100%;"></div>
+              </div>
+              <span class="usage-count">42</span>
+            </div>
+
+            <div class="usage-row">
+              <span class="usage-label">Extra bed</span>
+              <div class="bar-track">
+                <div class="bar-fill" style="width:50%;"></div>
+              </div>
+              <span class="usage-count">21</span>
+            </div>
+
+            <div class="usage-row">
+              <span class="usage-label">Airport transfer</span>
+              <div class="bar-track">
+                <div class="bar-fill" style="width:40%;"></div>
+              </div>
+              <span class="usage-count">17</span>
+            </div>
+
+            <div class="usage-row">
+              <span class="usage-label">Fruit basket</span>
+              <div class="bar-track">
+                <div class="bar-fill" style="width:19%;"></div>
+              </div>
+              <span class="usage-count">8</span>
+            </div>
+
+            <div class="usage-row">
+              <span class="usage-label">Late checkout</span>
+              <div class="bar-track">
+                <div class="bar-fill" style="width:14%;"></div>
+              </div>
+              <span class="usage-count">6</span>
+            </div>
+
+            <div class="usage-row">
+              <span class="usage-label">Baby cot</span>
+              <div class="bar-track">
+                <div class="bar-fill" style="width:10%;"></div>
+              </div>
+              <span class="usage-count">4</span>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>

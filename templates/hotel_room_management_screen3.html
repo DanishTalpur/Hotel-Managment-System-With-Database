@@ -1,0 +1,486 @@
+{% if active == 'rooms' %}
+
+<div class="main">
+
+  <div class="topbar">
+    <div>
+      <div class="page-title">Room management</div>
+      <div class="page-sub">{{ current_date }}</div>
+    </div>
+
+    <div style="display:flex;gap:8px;align-items:center;">
+      <div style="position:relative;">
+        <i class="ti ti-bell"
+           aria-hidden="true"
+           style="font-size:18px;color:var(--color-text-secondary);cursor:pointer;"></i>
+
+        <span style="position:absolute;
+                     top:-4px;
+                     right:-4px;
+                     background:#E24B4A;
+                     color:#fff;
+                     font-size:8px;
+                     border-radius:50%;
+                     width:13px;
+                     height:13px;
+                     display:flex;
+                     align-items:center;
+                     justify-content:center;">
+          3
+        </span>
+      </div>
+
+      <div class="avatar">AM</div>
+    </div>
+  </div>
+
+  <!-- STATS -->
+
+  <div class="stats-grid">
+
+    <div class="stat-card">
+      <div class="stat-label">
+        <i class="ti ti-building"
+           aria-hidden="true"
+           style="color:#185FA5;"></i>
+
+        Total rooms
+      </div>
+
+      <div class="stat-value">
+        {{ room_stats.total_rooms }}
+      </div>
+
+      <div class="stat-sub">
+        Live from database
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-label">
+        <i class="ti ti-door-enter"
+           aria-hidden="true"
+           style="color:#3B6D11;"></i>
+
+        Vacant
+      </div>
+
+      <div class="stat-value">
+        {{ room_stats.vacant }}
+      </div>
+
+      <div class="stat-sub">
+        Available now
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-label">
+        <i class="ti ti-tools"
+           aria-hidden="true"
+           style="color:#854F0B;"></i>
+
+        Maintenance
+      </div>
+
+      <div class="stat-value">
+        {{ room_stats.maintenance }}
+      </div>
+
+      <div class="stat-sub">
+        Temporarily offline
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-label">
+        <i class="ti ti-chart-bar"
+           aria-hidden="true"
+           style="color:#534AB7;"></i>
+
+        Occupancy rate
+      </div>
+
+      <div class="stat-value">
+        {{ room_stats.occupancy_rate }}%
+      </div>
+
+      <div class="stat-sub">
+        Today
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ROOM TABLE -->
+
+  <div class="card">
+
+    <div class="card-head">
+
+      <div class="card-title">
+        All rooms
+      </div>
+
+      <form method="GET"
+            action="/rooms"
+            class="filters">
+
+        <input
+          type="text"
+          name="search"
+          placeholder="Search room no."
+          value="{{ request.query_params.get('search', '') }}"
+          style="width:140px;"
+        >
+
+        <select
+          name="room_type"
+          onchange="this.form.submit()"
+          style="width:120px;"
+        >
+
+          <option value="">All types</option>
+
+          {% for type in room_types %}
+
+          <option
+            value="{{ type.type_name }}"
+            {% if request.query_params.get('room_type') == type.type_name %}
+            selected
+            {% endif %}
+          >
+            {{ type.type_name }}
+          </option>
+
+          {% endfor %}
+
+        </select>
+
+        <select
+          name="status"
+          onchange="this.form.submit()"
+          style="width:120px;"
+        >
+
+          <option value="">All statuses</option>
+
+          <option value="Vacant">
+            Vacant
+          </option>
+
+          <option value="Occupied">
+            Occupied
+          </option>
+
+          <option value="Maintenance">
+            Maintenance
+          </option>
+
+        </select>
+
+        <button class="btn-primary">
+          <i class="ti ti-search"></i>
+          Search
+        </button>
+
+      </form>
+
+    </div>
+
+    <table class="tbl">
+
+      <thead>
+
+        <tr>
+
+          <th style="width:70px;">
+            Room no.
+          </th>
+
+          <th style="width:50px;">
+            Floor
+          </th>
+
+          <th style="width:90px;">
+            Type
+          </th>
+
+          <th style="width:60px;">
+            Guests
+          </th>
+
+          <th style="width:80px;">
+            Status
+          </th>
+
+          <th style="width:70px;">
+            Actions
+          </th>
+
+        </tr>
+
+      </thead>
+
+      <tbody>
+
+        {% if rooms %}
+
+          {% for room in rooms %}
+
+          <tr>
+
+            <td style="font-weight:500;">
+              {{ room.room_number }}
+            </td>
+
+            <td>
+              {{ room.floor_number }}
+            </td>
+
+            <td>
+              {{ room.type_name }}
+            </td>
+
+            <td style="text-align:center;">
+              {{ room.max_guests }}
+            </td>
+
+            <td>
+
+              <span class="badge
+
+                {% if room.status == 'Occupied' %}
+                  b-occupied
+
+                {% elif room.status == 'Vacant' %}
+                  b-vacant
+
+                {% elif room.status == 'Maintenance' %}
+                  b-maintenance
+
+                {% else %}
+                  b-checkout
+
+                {% endif %}
+              ">
+
+                {{ room.status }}
+
+              </span>
+
+            </td>
+
+            <td>
+
+              <div style="display:flex;gap:4px;">
+
+                <button class="icon-btn">
+                  <i class="ti ti-edit"></i>
+                </button>
+
+                <form
+                  method="POST"
+                  action="/rooms/delete/{{ room.room_id }}"
+                >
+
+                  <button
+                    type="submit"
+                    class="icon-btn del"
+                  >
+                    <i class="ti ti-trash"></i>
+                  </button>
+
+                </form>
+
+              </div>
+
+            </td>
+
+          </tr>
+
+          {% endfor %}
+
+        {% else %}
+
+        <tr>
+
+          <td colspan="6"
+              style="text-align:center;
+                     padding:20px;
+                     color:var(--color-text-secondary);">
+
+            No rooms found.
+
+          </td>
+
+        </tr>
+
+        {% endif %}
+
+      </tbody>
+
+    </table>
+
+    <div style="display:flex;
+                justify-content:space-between;
+                align-items:center;
+                margin-top:12px;">
+
+      <div style="font-size:11px;
+                  color:var(--color-text-secondary);">
+
+        Showing {{ rooms|length }} rooms
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- ADD ROOM -->
+
+  <div class="two-col">
+
+    <div class="card">
+
+      <div class="card-head">
+
+        <div class="card-title">
+          <i class="ti ti-building-plus"
+             aria-hidden="true"
+             style="margin-right:6px;color:#185FA5;"></i>
+
+          Add room
+        </div>
+
+      </div>
+
+      <form method="POST"
+            action="/rooms/add">
+
+        <div class="form-section">
+          Basic info
+        </div>
+
+        <div class="form-grid">
+
+          <div class="form-group">
+
+            <label>
+              Room number
+            </label>
+
+            <input
+              type="text"
+              name="room_number"
+              required
+            >
+
+          </div>
+
+          <div class="form-group">
+
+            <label>
+              Floor number
+            </label>
+
+            <input
+              type="number"
+              name="floor_number"
+              required
+            >
+
+          </div>
+
+          <div class="form-group">
+
+            <label>
+              Room type
+            </label>
+
+            <select
+              name="room_type_id"
+              required
+            >
+
+              {% for type in room_types %}
+
+              <option value="{{ type.room_type_id }}">
+                {{ type.type_name }}
+              </option>
+
+              {% endfor %}
+
+            </select>
+
+          </div>
+
+          <div class="form-group">
+
+            <label>
+              Status
+            </label>
+
+            <select name="status">
+
+              <option value="Vacant">
+                Vacant
+              </option>
+
+              <option value="Occupied">
+                Occupied
+              </option>
+
+              <option value="Maintenance">
+                Maintenance
+              </option>
+
+            </select>
+
+          </div>
+
+          <div class="form-group">
+
+            <label>
+              Max guests
+            </label>
+
+            <input
+              type="number"
+              name="max_guests"
+              required
+            >
+
+          </div>
+
+        </div>
+
+        <div style="display:flex;
+                    gap:8px;
+                    margin-top:16px;">
+
+          <button
+            class="btn-primary"
+            style="flex:1;
+                   justify-content:center;"
+          >
+
+            <i class="ti ti-check"
+               aria-hidden="true"></i>
+
+            Save room
+
+          </button>
+
+        </div>
+
+      </form>
+
+    </div>
+
+  </div>
+
+</div>
+
+{% endif %}

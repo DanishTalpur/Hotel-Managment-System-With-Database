@@ -1,0 +1,85 @@
+<h1>Guests</h1>
+
+<form action="/add_guest" method="POST">
+
+    <input
+        type="text"
+        name="first_name"
+        placeholder="First Name"
+        required
+    >
+
+    <input
+        type="text"
+        name="last_name"
+        placeholder="Last Name"
+        required
+    >
+
+    <input
+        type="email"
+        name="email"
+        placeholder="Email"
+    >
+
+    <input
+        type="text"
+        name="phone"
+        placeholder="Phone"
+    >
+
+    <input
+        type="text"
+        name="nationality"
+        placeholder="Nationality"
+    >
+
+    <button type="submit">
+        Add Guest
+    </button>
+
+</form>
+
+<hr>
+
+<table border="1" cellpadding="10">
+
+    <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Email</th>
+        <th>Phone</th>
+        <th>Nationality</th>
+        <th>Action</th>
+    </tr>
+
+    {% for guest in guests %}
+
+    <tr>
+
+        <td>{{ guest.guest_id }}</td>
+
+        <td>
+            {{ guest.first_name }}
+            {{ guest.last_name }}
+        </td>
+
+        <td>{{ guest.email }}</td>
+
+        <td>{{ guest.phone }}</td>
+
+        <td>{{ guest.nationality }}</td>
+
+        <td>
+
+            <a href="/delete_guest/{{ guest.guest_id }}">
+                Delete
+            </a>
+
+        </td>
+
+    </tr>
+
+    {% endfor %}
+
+</table>

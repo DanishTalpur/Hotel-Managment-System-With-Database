@@ -1,0 +1,987 @@
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+
+.shell{
+  display:flex;
+  min-height:100vh;
+  background:var(--color-background-tertiary);
+  border-radius:var(--border-radius-lg);
+  overflow:hidden;
+  border:0.5px solid var(--color-border-tertiary);
+}
+
+/* SIDEBAR */
+
+.sidebar{
+  width:220px;
+  background:var(--color-background-primary);
+  border-right:0.5px solid var(--color-border-tertiary);
+  padding:20px 0;
+  display:flex;
+  flex-direction:column;
+  flex-shrink:0;
+}
+
+.logo-wrap{
+  padding:0 20px 20px;
+  border-bottom:0.5px solid var(--color-border-tertiary);
+  margin-bottom:12px;
+}
+
+.logo-text{
+  font-size:17px;
+  font-weight:600;
+  color:var(--color-text-primary);
+}
+
+.logo-sub{
+  font-size:11px;
+  color:var(--color-text-secondary);
+  margin-top:3px;
+}
+
+.nav-item{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:10px 20px;
+  font-size:13px;
+  color:var(--color-text-secondary);
+  cursor:pointer;
+  transition:.2s;
+}
+
+.nav-item:hover{
+  background:var(--color-background-secondary);
+  color:var(--color-text-primary);
+}
+
+.nav-item.active{
+  color:#185FA5;
+  background:#E6F1FB;
+  border-right:2px solid #185FA5;
+  font-weight:600;
+}
+
+.nav-item i{font-size:16px;}
+
+.nav-sec{
+  font-size:10px;
+  color:var(--color-text-tertiary);
+  padding:14px 20px 6px;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+}
+
+/* MAIN */
+
+.main{
+  flex:1;
+  padding:20px;
+  display:flex;
+  flex-direction:column;
+  gap:16px;
+  overflow:auto;
+}
+
+.topbar{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.page-title{
+  font-size:22px;
+  font-weight:600;
+  color:var(--color-text-primary);
+}
+
+.page-sub{
+  font-size:12px;
+  color:var(--color-text-secondary);
+  margin-top:2px;
+}
+
+.avatar-top{
+  width:34px;
+  height:34px;
+  border-radius:50%;
+  background:#B5D4F4;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:11px;
+  font-weight:600;
+  color:#185FA5;
+}
+
+/* STATS */
+
+.stats-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:12px;
+}
+
+.stat-card{
+  background:var(--color-background-primary);
+  border:0.5px solid var(--color-border-tertiary);
+  border-radius:var(--border-radius-lg);
+  padding:16px;
+}
+
+.stat-label{
+  font-size:11px;
+  color:var(--color-text-secondary);
+  margin-bottom:8px;
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+
+.stat-value{
+  font-size:24px;
+  font-weight:600;
+  color:var(--color-text-primary);
+}
+
+.stat-sub{
+  font-size:11px;
+  margin-top:5px;
+  color:var(--color-text-secondary);
+}
+
+/* LAYOUT */
+
+.two-col{
+  display:grid;
+  grid-template-columns:minmax(0,1.7fr) minmax(320px,1fr);
+  gap:16px;
+}
+
+.card{
+  background:var(--color-background-primary);
+  border:0.5px solid var(--color-border-tertiary);
+  border-radius:var(--border-radius-lg);
+  padding:18px;
+}
+
+.card-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:16px;
+  flex-wrap:wrap;
+  gap:10px;
+}
+
+.card-title{
+  font-size:14px;
+  font-weight:600;
+  color:var(--color-text-primary);
+}
+
+/* BUTTONS */
+
+.btn-primary,
+.btn-outline,
+.btn-danger{
+  border:none;
+  border-radius:var(--border-radius-md);
+  padding:8px 14px;
+  font-size:12px;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  height:34px;
+  transition:.2s;
+}
+
+.btn-primary{
+  background:#185FA5;
+  color:#fff;
+}
+
+.btn-primary:hover{
+  background:#0f4e8d;
+}
+
+.btn-outline{
+  background:var(--color-background-primary);
+  color:var(--color-text-primary);
+  border:0.5px solid var(--color-border-secondary);
+}
+
+.btn-outline:hover{
+  background:var(--color-background-secondary);
+}
+
+.btn-danger{
+  background:#A32D2D;
+  color:#fff;
+}
+
+.btn-danger:hover{
+  background:#882424;
+}
+
+/* FILTERS */
+
+.filters{
+  display:flex;
+  gap:8px;
+  align-items:center;
+  flex-wrap:wrap;
+}
+
+.filters select{
+  font-size:12px;
+  padding:7px 10px;
+  border-radius:var(--border-radius-md);
+  border:0.5px solid var(--color-border-tertiary);
+  background:var(--color-background-secondary);
+  color:var(--color-text-primary);
+  height:34px;
+}
+
+/* TABLE */
+
+.matrix-wrap{
+  overflow-x:auto;
+}
+
+.matrix{
+  border-collapse:collapse;
+  width:100%;
+  min-width:760px;
+}
+
+.matrix th{
+  background:var(--color-background-secondary);
+  padding:10px;
+  font-size:10px;
+  font-weight:600;
+  color:var(--color-text-secondary);
+  border:0.5px solid var(--color-border-tertiary);
+  text-align:center;
+  white-space:nowrap;
+}
+
+.matrix td{
+  padding:10px;
+  border:0.5px solid var(--color-border-tertiary);
+  text-align:center;
+  color:var(--color-text-primary);
+  font-size:12px;
+}
+
+.matrix tr:hover td{
+  background:var(--color-background-secondary);
+}
+
+.matrix td.row-label{
+  background:var(--color-background-secondary);
+  font-weight:600;
+  text-align:left;
+  color:var(--color-text-primary);
+  font-size:11px;
+  min-width:180px;
+}
+
+.price-cell{
+  font-weight:600;
+}
+
+/* ICON BUTTON */
+
+.icon-btn{
+  background:none;
+  border:none;
+  cursor:pointer;
+  color:var(--color-text-secondary);
+  font-size:15px;
+  padding:4px;
+  transition:.2s;
+}
+
+.icon-btn:hover{
+  color:#185FA5;
+}
+
+.icon-btn.del:hover{
+  color:#A32D2D;
+}
+
+/* FORM */
+
+.form-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+}
+
+.form-group{
+  display:flex;
+  flex-direction:column;
+  gap:5px;
+}
+
+.form-group label{
+  font-size:11px;
+  color:var(--color-text-secondary);
+  font-weight:600;
+}
+
+.form-group input,
+.form-group select{
+  font-size:12px;
+  padding:9px 10px;
+  border-radius:var(--border-radius-md);
+  border:0.5px solid var(--color-border-tertiary);
+  background:var(--color-background-secondary);
+  color:var(--color-text-primary);
+}
+
+.form-group input:focus,
+.form-group select:focus{
+  outline:none;
+  border-color:#185FA5;
+  background:#fff;
+}
+
+.form-section{
+  font-size:11px;
+  font-weight:600;
+  color:var(--color-text-secondary);
+  margin:10px 0 12px;
+  padding-bottom:6px;
+  border-bottom:0.5px solid var(--color-border-tertiary);
+  text-transform:uppercase;
+  letter-spacing:.06em;
+}
+
+/* FACILITY */
+
+.fac-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:10px 0;
+  border-bottom:0.5px solid var(--color-border-tertiary);
+  font-size:12px;
+}
+
+.fac-row:last-child{
+  border-bottom:none;
+}
+
+.toggle{
+  width:38px;
+  height:20px;
+  background:#d7d7d7;
+  border-radius:20px;
+  cursor:pointer;
+  position:relative;
+  transition:.2s;
+}
+
+.toggle.on{
+  background:#185FA5;
+}
+
+.toggle-dot{
+  position:absolute;
+  top:2px;
+  left:2px;
+  width:16px;
+  height:16px;
+  background:#fff;
+  border-radius:50%;
+  transition:.2s;
+}
+
+.toggle.on .toggle-dot{
+  left:20px;
+}
+
+/* RESPONSIVE */
+
+@media(max-width:1100px){
+
+  .two-col{
+    grid-template-columns:1fr;
+  }
+
+}
+
+@media(max-width:900px){
+
+  .shell{
+    flex-direction:column;
+  }
+
+  .sidebar{
+    width:100%;
+    flex-direction:row;
+    overflow:auto;
+    padding:10px;
+    gap:4px;
+  }
+
+  .logo-wrap,
+  .nav-sec{
+    display:none;
+  }
+
+  .nav-item{
+    white-space:nowrap;
+    border-radius:10px;
+    padding:10px 14px;
+  }
+
+}
+
+@media(max-width:700px){
+
+  .form-grid{
+    grid-template-columns:1fr;
+  }
+
+  .stats-grid{
+    grid-template-columns:1fr;
+  }
+
+  .topbar{
+    flex-direction:column;
+    align-items:flex-start;
+    gap:12px;
+  }
+
+}
+</style>
+
+<div class="shell">
+
+  <!-- SIDEBAR -->
+
+  <div class="sidebar">
+
+    <div class="logo-wrap">
+      <div class="logo-text">
+        <i class="ti ti-building"></i>
+        StayDesk
+      </div>
+      <div class="logo-sub">Hotel Management</div>
+    </div>
+
+    <div class="nav-sec">Main</div>
+
+    <div class="nav-item">
+      <i class="ti ti-layout-dashboard"></i>
+      Dashboard
+    </div>
+
+    <div class="nav-item">
+      <i class="ti ti-calendar"></i>
+      Reservations
+    </div>
+
+    <div class="nav-item">
+      <i class="ti ti-door"></i>
+      Rooms
+    </div>
+
+    <div class="nav-item">
+      <i class="ti ti-users"></i>
+      Guests
+    </div>
+
+    <div class="nav-sec">Finance</div>
+
+    <div class="nav-item">
+      <i class="ti ti-receipt"></i>
+      Invoices
+    </div>
+
+    <div class="nav-item active">
+      <i class="ti ti-tag"></i>
+      Rates
+    </div>
+
+    <div class="nav-sec">Operations</div>
+
+    <div class="nav-item">
+      <i class="ti ti-tools"></i>
+      Services
+    </div>
+
+    <div class="nav-item">
+      <i class="ti ti-star"></i>
+      Extras
+    </div>
+
+    <div style="margin-top:auto;padding:0 20px;">
+      <div class="nav-item" style="padding-left:0;">
+        <i class="ti ti-settings"></i>
+        Settings
+      </div>
+    </div>
+
+  </div>
+
+  <!-- MAIN -->
+
+  <div class="main">
+
+    <!-- TOPBAR -->
+
+    <div class="topbar">
+
+      <div>
+        <div class="page-title">Rates Management</div>
+        <div class="page-sub">Saturday, 23 May 2026</div>
+      </div>
+
+      <div style="display:flex;gap:10px;align-items:center;">
+
+        <div style="position:relative;">
+          <i class="ti ti-bell" style="font-size:18px;color:var(--color-text-secondary);cursor:pointer;"></i>
+
+          <span style="
+            position:absolute;
+            top:-4px;
+            right:-4px;
+            background:#E24B4A;
+            color:#fff;
+            font-size:8px;
+            border-radius:50%;
+            width:14px;
+            height:14px;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+          ">
+            3
+          </span>
+        </div>
+
+        <div class="avatar-top">AM</div>
+
+      </div>
+
+    </div>
+
+    <!-- STATS -->
+
+    <div class="stats-grid">
+
+      <div class="stat-card">
+        <div class="stat-label">
+          <i class="ti ti-layers" style="color:#185FA5;"></i>
+          Rate types
+        </div>
+        <div class="stat-value">5</div>
+        <div class="stat-sub">Rack, Corporate, F&F, Group, Gov.</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-label">
+          <i class="ti ti-calendar-stats" style="color:#3B6D11;"></i>
+          Active seasons
+        </div>
+        <div class="stat-value">3</div>
+        <div class="stat-sub">Current pricing period active</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-label">
+          <i class="ti ti-receipt" style="color:#534AB7;"></i>
+          Total rate records
+        </div>
+        <div class="stat-value">720</div>
+        <div class="stat-sub">Across all room categories</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-label">
+          <i class="ti ti-tag" style="color:#854F0B;"></i>
+          Avg. rack rate
+        </div>
+        <div class="stat-value">$185</div>
+        <div class="stat-sub">Average nightly charge</div>
+      </div>
+
+    </div>
+
+    <!-- RATE MATRIX -->
+
+    <div class="card">
+
+      <div class="card-head">
+
+        <div class="card-title">
+          Rate matrix — room type × occupancy × rate type
+        </div>
+
+        <div class="filters">
+
+          <select>
+            <option>All seasons</option>
+            <option>15 Dec – 15 Jan</option>
+            <option>16 Jan – 16 May</option>
+            <option>17 May – 14 Dec</option>
+          </select>
+
+          <button class="btn-primary">
+            <i class="ti ti-plus"></i>
+            Add rate
+          </button>
+
+        </div>
+
+      </div>
+
+      <div class="matrix-wrap">
+
+        <table class="matrix">
+
+          <thead>
+
+            <tr>
+              <th style="text-align:left;">Room · Occupancy</th>
+              <th>Rack</th>
+              <th>Corporate</th>
+              <th>F&amp;F</th>
+              <th>Group</th>
+              <th>Government</th>
+              <th>Actions</th>
+            </tr>
+
+          </thead>
+
+          <tbody id="rateTableBody"></tbody>
+
+        </table>
+
+      </div>
+
+    </div>
+
+    <!-- TWO COL -->
+
+    <div class="two-col">
+
+      <!-- FORM -->
+
+      <div class="card">
+
+        <div class="card-head">
+          <div class="card-title">
+            <i class="ti ti-plus" style="color:#185FA5;"></i>
+            Add / Edit Rate
+          </div>
+        </div>
+
+        <div class="form-section">Rate Details</div>
+
+        <div class="form-grid">
+
+          <div class="form-group">
+            <label>Rate type</label>
+            <select>
+              <option>Rack rate</option>
+              <option>Corporate rate</option>
+              <option>Friends &amp; family</option>
+              <option>Group rate</option>
+              <option>Government rate</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Room type</label>
+            <select>
+              <option>Standard</option>
+              <option>Deluxe</option>
+              <option>Executive</option>
+              <option>Suite</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Occupancy type</label>
+            <select>
+              <option>Single</option>
+              <option>Twin</option>
+              <option>Double</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Amount per night ($)</label>
+            <input type="number" placeholder="e.g. 180">
+          </div>
+
+          <div class="form-group">
+            <label>Season start date</label>
+            <input type="date">
+          </div>
+
+          <div class="form-group">
+            <label>Season end date</label>
+            <input type="date">
+          </div>
+
+        </div>
+
+        <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap;">
+
+          <button class="btn-primary" style="flex:1;">
+            <i class="ti ti-check"></i>
+            Save rate
+          </button>
+
+          <button class="btn-danger" style="flex:1;">
+            <i class="ti ti-trash"></i>
+            Delete rate
+          </button>
+
+        </div>
+
+      </div>
+
+      <!-- FACILITIES -->
+
+      <div class="card">
+
+        <div class="card-head">
+
+          <div class="card-title">
+            <i class="ti ti-gift" style="color:#185FA5;"></i>
+            Facilities per rate type
+          </div>
+
+          <span style="font-size:11px;color:var(--color-text-secondary);">
+            Toggle to include
+          </span>
+
+        </div>
+
+        <div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:12px;">
+          Rate type:
+          <strong style="color:var(--color-text-primary);">
+            Rack rate
+          </strong>
+        </div>
+
+        <div id="facilityList"></div>
+
+        <div style="margin-top:16px;">
+          <button class="btn-primary" style="width:100%;">
+            <i class="ti ti-check"></i>
+            Save facility settings
+          </button>
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+
+/* =========================
+   RATE TABLE DATA
+========================= */
+
+const rates = [
+  {
+    room:'Standard · Single',
+    rack:95,
+    corp:80,
+    ff:75,
+    group:70,
+    gov:72
+  },
+  {
+    room:'Standard · Twin',
+    rack:110,
+    corp:92,
+    ff:85,
+    group:80,
+    gov:83
+  },
+  {
+    room:'Deluxe · Single',
+    rack:140,
+    corp:120,
+    ff:110,
+    group:100,
+    gov:105
+  },
+  {
+    room:'Deluxe · Double',
+    rack:165,
+    corp:140,
+    ff:130,
+    group:120,
+    gov:125
+  },
+  {
+    room:'Executive · Double',
+    rack:200,
+    corp:170,
+    ff:155,
+    group:145,
+    gov:150
+  },
+  {
+    room:'Suite · Double',
+    rack:260,
+    corp:220,
+    ff:200,
+    group:185,
+    gov:190
+  }
+];
+
+const rateTableBody = document.getElementById('rateTableBody');
+
+function renderRates(){
+
+  rateTableBody.innerHTML = '';
+
+  rates.forEach((rate,index)=>{
+
+    rateTableBody.innerHTML += `
+      <tr>
+
+        <td class="row-label">${rate.room}</td>
+
+        <td class="price-cell">$${rate.rack}</td>
+
+        <td class="price-cell">$${rate.corp}</td>
+
+        <td class="price-cell">$${rate.ff}</td>
+
+        <td class="price-cell">$${rate.group}</td>
+
+        <td class="price-cell">$${rate.gov}</td>
+
+        <td>
+          <div style="display:flex;gap:4px;justify-content:center;">
+
+            <button class="icon-btn" onclick="editRate(${index})">
+              <i class="ti ti-edit"></i>
+            </button>
+
+            <button class="icon-btn del" onclick="deleteRate(${index})">
+              <i class="ti ti-trash"></i>
+            </button>
+
+          </div>
+        </td>
+
+      </tr>
+    `;
+
+  });
+
+}
+
+renderRates();
+
+function editRate(index){
+  alert('Edit rate: ' + rates[index].room);
+}
+
+function deleteRate(index){
+
+  const confirmDelete = confirm(
+    'Delete ' + rates[index].room + ' rate?'
+  );
+
+  if(confirmDelete){
+    rates.splice(index,1);
+    renderRates();
+  }
+
+}
+
+/* =========================
+   FACILITIES
+========================= */
+
+const facilities = [
+  {
+    name:'Breakfast',
+    enabled:true
+  },
+  {
+    name:'Newspaper',
+    enabled:true
+  },
+  {
+    name:'Complimentary toiletries',
+    enabled:true
+  },
+  {
+    name:'Airport transfer',
+    enabled:false
+  },
+  {
+    name:'Welcome drink',
+    enabled:false
+  },
+  {
+    name:'Free parking',
+    enabled:true
+  }
+];
+
+const facilityList = document.getElementById('facilityList');
+
+function renderFacilities(){
+
+  facilityList.innerHTML = '';
+
+  facilities.forEach((facility,index)=>{
+
+    facilityList.innerHTML += `
+
+      <div class="fac-row">
+
+        <span style="color:var(--color-text-primary);font-size:12px;">
+          ${facility.name}
+        </span>
+
+        <div 
+          class="toggle ${facility.enabled ? 'on' : ''}"
+          onclick="toggleFacility(${index})"
+        >
+          <div class="toggle-dot"></div>
+        </div>
+
+      </div>
+
+    `;
+
+  });
+
+}
+
+renderFacilities();
+
+function toggleFacility(index){
+
+  facilities[index].enabled = !facilities[index].enabled;
+
+  renderFacilities();
+
+}
+
+</script>

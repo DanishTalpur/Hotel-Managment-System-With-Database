@@ -1,0 +1,693 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+.shell{display:flex;min-height:840px;background:var(--color-background-tertiary);border-radius:var(--border-radius-lg);overflow:hidden;border:0.5px solid var(--color-border-tertiary);}
+.sidebar{width:200px;background:var(--color-background-primary);border-right:0.5px solid var(--color-border-tertiary);padding:20px 0;display:flex;flex-direction:column;flex-shrink:0;}
+.logo-wrap{padding:0 20px 20px;border-bottom:0.5px solid var(--color-border-tertiary);margin-bottom:12px;}
+.logo-text{font-size:16px;font-weight:500;color:var(--color-text-primary);}
+.logo-sub{font-size:11px;color:var(--color-text-secondary);margin-top:2px;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 20px;font-size:13px;color:var(--color-text-secondary);cursor:pointer;text-decoration:none;}
+.nav-item.active{color:#185FA5;background:#E6F1FB;border-right:2px solid #185FA5;font-weight:500;}
+.nav-item i{font-size:16px;}
+.nav-sec{font-size:10px;color:var(--color-text-tertiary);padding:12px 20px 4px;letter-spacing:0.08em;text-transform:uppercase;}
+.main{flex:1;padding:20px;display:flex;flex-direction:column;gap:16px;}
+.topbar{display:flex;justify-content:space-between;align-items:center;}
+.page-title{font-size:18px;font-weight:500;color:var(--color-text-primary);}
+.page-sub{font-size:12px;color:var(--color-text-secondary);}
+.avatar-top{width:32px;height:32px;border-radius:50%;background:#B5D4F4;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;color:#185FA5;}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+.stat-card{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:14px;}
+.stat-label{font-size:11px;color:var(--color-text-secondary);margin-bottom:6px;display:flex;align-items:center;gap:6px;}
+.stat-value{font-size:22px;font-weight:500;color:var(--color-text-primary);}
+.stat-sub{font-size:11px;margin-top:3px;}
+.stat-sub.up{color:#3B6D11;}
+.stat-sub.down{color:#A32D2D;}
+.stat-sub.muted{color:var(--color-text-secondary);}
+.two-col{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:14px;}
+.card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:16px;}
+.card-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px;}
+.card-title{font-size:13px;font-weight:500;color:var(--color-text-primary);}
+.btn-primary{background:#185FA5;color:#fff;border:none;border-radius:var(--border-radius-md);padding:7px 14px;font-size:12px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px;height:32px;}
+.btn-outline{background:var(--color-background-primary);color:var(--color-text-primary);border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);padding:7px 14px;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:6px;height:32px;}
+.btn-success{background:#3B6D11;color:#fff;border:none;border-radius:var(--border-radius-md);padding:7px 14px;font-size:12px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px;height:32px;}
+.filters{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+.filters input,.filters select{font-size:12px;padding:6px 10px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-tertiary);background:var(--color-background-secondary);color:var(--color-text-primary);height:32px;}
+.tbl{width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed;}
+.tbl th{text-align:left;font-size:10px;font-weight:500;color:var(--color-text-secondary);padding:0 8px 8px;border-bottom:0.5px solid var(--color-border-tertiary);}
+.tbl td{padding:9px 8px;border-bottom:0.5px solid var(--color-border-tertiary);color:var(--color-text-primary);vertical-align:middle;}
+.tbl tr:last-child td{border-bottom:none;}
+.tbl tr:hover td{background:var(--color-background-secondary);}
+.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:500;}
+
+.b-paid{background:#C0DD97;color:#27500A;}
+.b-pending{background:#FAC775;color:#633806;}
+.b-overdue{background:#F7C1C1;color:#791F1F;}
+.b-partial{background:#CECBF6;color:#3C3489;}
+
+.icon-btn{background:none;border:none;cursor:pointer;color:var(--color-text-secondary);font-size:15px;padding:3px;}
+.icon-btn:hover{color:#185FA5;}
+
+.av{
+width:26px;
+height:26px;
+border-radius:50%;
+display:flex;
+align-items:center;
+justify-content:center;
+font-size:10px;
+font-weight:500;
+flex-shrink:0;
+}
+
+.guest-cell{display:flex;align-items:center;gap:7px;}
+
+.divider{
+border:none;
+border-top:0.5px solid var(--color-border-tertiary);
+margin:12px 0;
+}
+
+.line-row{
+display:flex;
+justify-content:space-between;
+align-items:center;
+padding:7px 0;
+border-bottom:0.5px solid var(--color-border-tertiary);
+font-size:12px;
+}
+
+.line-row:last-child{
+border-bottom:none;
+}
+
+.line-label{
+color:var(--color-text-secondary);
+}
+
+.line-val{
+font-weight:500;
+color:var(--color-text-primary);
+}
+
+.service-row{
+display:flex;
+justify-content:space-between;
+align-items:center;
+padding:6px 0;
+font-size:12px;
+border-bottom:0.5px solid var(--color-border-tertiary);
+}
+
+.service-row:last-child{
+border-bottom:none;
+}
+
+.rev-bar-wrap{
+display:flex;
+flex-direction:column;
+gap:7px;
+}
+
+.rev-bar-row{
+display:flex;
+align-items:center;
+gap:8px;
+font-size:11px;
+}
+
+.rev-label{
+width:32px;
+color:var(--color-text-secondary);
+flex-shrink:0;
+}
+
+.bar-track{
+flex:1;
+background:var(--color-background-secondary);
+border-radius:4px;
+height:10px;
+overflow:hidden;
+position:relative;
+}
+
+.rev-val{
+width:40px;
+text-align:right;
+color:var(--color-text-secondary);
+flex-shrink:0;
+font-size:10px;
+}
+
+.legend-row{
+display:flex;
+gap:12px;
+margin-top:8px;
+}
+
+.leg-dot{
+width:8px;
+height:8px;
+border-radius:2px;
+flex-shrink:0;
+}
+
+.leg-item{
+display:flex;
+align-items:center;
+gap:5px;
+font-size:10px;
+color:var(--color-text-secondary);
+}
+</style>
+
+<div class="shell">
+
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+
+        <div class="logo-wrap">
+            <div class="logo-text">
+                <i class="ti ti-building"></i>
+                StayDesk
+            </div>
+            <div class="logo-sub">Hotel Management</div>
+        </div>
+
+        <div class="nav-sec">Main</div>
+
+        <a href="/dashboard" class="nav-item">
+            <i class="ti ti-layout-dashboard"></i>
+            Dashboard
+        </a>
+
+        <a href="/reservations" class="nav-item">
+            <i class="ti ti-calendar"></i>
+            Reservations
+        </a>
+
+        <a href="/rooms" class="nav-item">
+            <i class="ti ti-door"></i>
+            Rooms
+        </a>
+
+        <a href="/guests" class="nav-item">
+            <i class="ti ti-users"></i>
+            Guests
+        </a>
+
+        <div class="nav-sec">Finance</div>
+
+        <a href="/invoices" class="nav-item active">
+            <i class="ti ti-receipt"></i>
+            Invoices
+        </a>
+
+        <a href="/rates" class="nav-item">
+            <i class="ti ti-tag"></i>
+            Rates
+        </a>
+
+        <div class="nav-sec">Operations</div>
+
+        <a href="/services" class="nav-item">
+            <i class="ti ti-tools"></i>
+            Services
+        </a>
+
+        <a href="/extras" class="nav-item">
+            <i class="ti ti-star"></i>
+            Extras
+        </a>
+
+    </div>
+
+    <!-- MAIN -->
+    <div class="main">
+
+        <!-- TOPBAR -->
+        <div class="topbar">
+
+            <div>
+                <div class="page-title">Invoices</div>
+                <div class="page-sub">{{ current_date }}</div>
+            </div>
+
+            <div class="avatar-top">
+                {{ admin_initials }}
+            </div>
+
+        </div>
+
+        <!-- STATS -->
+        <div class="stats-grid">
+
+            <div class="stat-card">
+                <div class="stat-label">
+                    <i class="ti ti-cash" style="color:#3B6D11;"></i>
+                    Revenue this month
+                </div>
+
+                <div class="stat-value">
+                    ${{ revenue_this_month }}
+                </div>
+
+                <div class="stat-sub up">
+                    {{ revenue_growth }}
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-label">
+                    <i class="ti ti-chart-bar" style="color:#185FA5;"></i>
+                    Potential revenue
+                </div>
+
+                <div class="stat-value">
+                    ${{ potential_revenue }}
+                </div>
+
+                <div class="stat-sub muted">
+                    At 100% occupancy
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-label">
+                    <i class="ti ti-clock" style="color:#854F0B;"></i>
+                    Pending payments
+                </div>
+
+                <div class="stat-value">
+                    ${{ pending_amount }}
+                </div>
+
+                <div class="stat-sub down">
+                    {{ pending_invoice_count }} invoices unpaid
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-label">
+                    <i class="ti ti-alert-triangle" style="color:#A32D2D;"></i>
+                    Overdue
+                </div>
+
+                <div class="stat-value">
+                    ${{ overdue_amount }}
+                </div>
+
+                <div class="stat-sub down">
+                    {{ overdue_invoice_count }} invoices overdue
+                </div>
+            </div>
+
+        </div>
+
+        <!-- INVOICE TABLE -->
+        <div class="card">
+
+            <div class="card-head">
+
+                <div class="card-title">
+                    All invoices
+                </div>
+
+                <form method="GET" class="filters">
+
+                    <input 
+                        type="text"
+                        name="search"
+                        placeholder="Search invoice / guest"
+                        value="{{ request.args.get('search','') }}"
+                        style="width:170px;"
+                    >
+
+                    <select name="status" style="width:120px;">
+                        <option value="">All statuses</option>
+                        <option value="Paid">Paid</option>
+                        <option value="Pending">Pending</option>
+                        <option value="Overdue">Overdue</option>
+                        <option value="Partial">Partial</option>
+                    </select>
+
+                    <input type="date" name="date" style="width:130px;">
+
+                    <button type="submit" class="btn-primary">
+                        <i class="ti ti-search"></i>
+                        Filter
+                    </button>
+
+                </form>
+
+            </div>
+
+            <table class="tbl">
+
+                <thead>
+                    <tr>
+                        <th>Invoice ID</th>
+                        <th>Guest</th>
+                        <th>Booking</th>
+                        <th>Issued</th>
+                        <th>Subtotal</th>
+                        <th>Tax</th>
+                        <th>Total</th>
+                        <th>Paid</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    {% for invoice in invoices %}
+
+                    <tr>
+
+                        <td style="color:#185FA5;font-weight:500;">
+                            #INV-{{ invoice.invoice_id }}
+                        </td>
+
+                        <td>
+                            <div class="guest-cell">
+
+                                <div class="av"
+                                    style="background:#B5D4F4;color:#0C447C;">
+                                    {{ invoice.guest_name[:2].upper() }}
+                                </div>
+
+                                {{ invoice.guest_name }}
+
+                            </div>
+                        </td>
+
+                        <td style="color:#185FA5;">
+                            #BK-{{ invoice.booking_id }}
+                        </td>
+
+                        <td>
+                            {{ invoice.issue_date }}
+                        </td>
+
+                        <td>
+                            ${{ invoice.subtotal }}
+                        </td>
+
+                        <td>
+                            ${{ invoice.tax }}
+                        </td>
+
+                        <td style="font-weight:500;">
+                            ${{ invoice.total_amount }}
+                        </td>
+
+                        <td style="font-weight:500;">
+                            ${{ invoice.amount_paid }}
+                        </td>
+
+                        <td>
+
+                            {% if invoice.status == "Paid" %}
+                                <span class="badge b-paid">Paid</span>
+
+                            {% elif invoice.status == "Pending" %}
+                                <span class="badge b-pending">Pending</span>
+
+                            {% elif invoice.status == "Overdue" %}
+                                <span class="badge b-overdue">Overdue</span>
+
+                            {% else %}
+                                <span class="badge b-partial">Partial</span>
+                            {% endif %}
+
+                        </td>
+
+                        <td>
+
+                            <div style="display:flex;gap:4px;">
+
+                                <a href="/invoice/{{ invoice.invoice_id }}">
+                                    <button class="icon-btn" type="button">
+                                        <i class="ti ti-eye"></i>
+                                    </button>
+                                </a>
+
+                                <a href="/invoice/download/{{ invoice.invoice_id }}">
+                                    <button class="icon-btn" type="button">
+                                        <i class="ti ti-download"></i>
+                                    </button>
+                                </a>
+
+                            </div>
+
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+        <!-- DETAIL SECTION -->
+        <div class="two-col">
+
+            <!-- INVOICE DETAIL -->
+            <div class="card">
+
+                {% if selected_invoice %}
+
+                <div class="card-head">
+
+                    <div class="card-title">
+                        <i class="ti ti-receipt" style="margin-right:6px;color:#185FA5;"></i>
+                        Invoice Detail — #INV-{{ selected_invoice.invoice_id }}
+                    </div>
+
+                    <span class="badge 
+                        {% if selected_invoice.status == 'Paid' %}b-paid
+                        {% elif selected_invoice.status == 'Pending' %}b-pending
+                        {% elif selected_invoice.status == 'Overdue' %}b-overdue
+                        {% else %}b-partial{% endif %}">
+                        {{ selected_invoice.status }}
+                    </span>
+
+                </div>
+
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;padding-bottom:14px;border-bottom:0.5px solid var(--color-border-tertiary);">
+
+                    <div>
+
+                        <div style="font-weight:500;font-size:14px;">
+                            {{ selected_invoice.guest_name }}
+                        </div>
+
+                        <div style="font-size:11px;color:var(--color-text-secondary);">
+                            Booking #BK-{{ selected_invoice.booking_id }}
+                        </div>
+
+                    </div>
+
+                    <div style="text-align:right;">
+
+                        <div style="font-size:11px;color:var(--color-text-secondary);">
+                            Issued
+                        </div>
+
+                        <div style="font-size:13px;font-weight:500;">
+                            {{ selected_invoice.issue_date }}
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <!-- SERVICES -->
+                {% for item in invoice_items %}
+
+                <div class="service-row">
+                    <span style="color:var(--color-text-secondary);">
+                        {{ item.description }}
+                    </span>
+
+                    <span style="font-weight:500;">
+                        ${{ item.amount }}
+                    </span>
+                </div>
+
+                {% endfor %}
+
+                <hr class="divider">
+
+                <div class="line-row">
+                    <span class="line-label">Subtotal</span>
+                    <span class="line-val">
+                        ${{ selected_invoice.subtotal }}
+                    </span>
+                </div>
+
+                <div class="line-row">
+                    <span class="line-label">Tax</span>
+                    <span class="line-val">
+                        ${{ selected_invoice.tax }}
+                    </span>
+                </div>
+
+                <div class="line-row">
+                    <span style="font-size:14px;font-weight:500;">
+                        Total
+                    </span>
+
+                    <span style="font-size:16px;font-weight:500;">
+                        ${{ selected_invoice.total_amount }}
+                    </span>
+                </div>
+
+                <div class="line-row">
+                    <span class="line-label">Paid amount</span>
+
+                    <span class="line-val" style="color:#3B6D11;">
+                        ${{ selected_invoice.amount_paid }}
+                    </span>
+                </div>
+
+                <div class="line-row">
+                    <span class="line-label">Balance due</span>
+
+                    <span class="line-val">
+                        ${{ selected_invoice.total_amount - selected_invoice.amount_paid }}
+                    </span>
+                </div>
+
+                {% else %}
+
+                <div style="padding:40px;text-align:center;color:var(--color-text-secondary);">
+                    Select an invoice to view details
+                </div>
+
+                {% endif %}
+
+            </div>
+
+            <!-- RIGHT SIDEBAR -->
+            <div style="display:flex;flex-direction:column;gap:14px;">
+
+                <!-- REVENUE -->
+                <div class="card">
+
+                    <div class="card-head">
+                        <div class="card-title">
+                            Revenue Overview
+                        </div>
+                    </div>
+
+                    <div class="rev-bar-wrap">
+
+                        {% for revenue in monthly_revenue %}
+
+                        <div class="rev-bar-row">
+
+                            <span class="rev-label">
+                                {{ revenue.month }}
+                            </span>
+
+                            <div class="bar-track">
+
+                              <div style="
+                                  position:absolute;
+                                  top:0;
+                                  left:0;
+                                  width:78%;
+                                  height:10px;
+                                  background:#C0DD97;
+                                  border-radius:4px;
+                              "></div>
+
+                              <div 
+                                  class="usage-fill"
+                                  data-width="{{ revenue.percent }}"
+                                  style="
+                                      position:absolute;
+                                      top:0;
+                                      left:0;
+                                      height:10px;
+                                      background:#378ADD;
+                                      border-radius:4px;
+                                      width:0;
+                                  ">
+                              </div>
+                            </div>
+                        {% endfor %}
+                        
+                    </div>
+
+                </div>
+
+                <!-- PAYMENT SUMMARY -->
+                <div class="card">
+
+                    <div class="card-head">
+                        <div class="card-title">
+                            Payment Summary
+                        </div>
+                    </div>
+
+                    <div class="line-row">
+                        <span class="line-label">Paid invoices</span>
+                        <span class="line-val" style="color:#3B6D11;">
+                            ${{ paid_total }}
+                        </span>
+                    </div>
+
+                    <div class="line-row">
+                        <span class="line-label">Pending</span>
+                        <span class="line-val" style="color:#854F0B;">
+                            ${{ pending_total }}
+                        </span>
+                    </div>
+
+                    <div class="line-row">
+                        <span class="line-label">Overdue</span>
+                        <span class="line-val" style="color:#A32D2D;">
+                            ${{ overdue_total }}
+                        </span>
+                    </div>
+
+                    <div class="line-row">
+                        <span class="line-label">Partial</span>
+                        <span class="line-val" style="color:#534AB7;">
+                            ${{ partial_total }}
+                        </span>
+                    </div>
+
+                    <hr class="divider">
+
+                    <div class="line-row" style="border-bottom:none;">
+
+                        <span style="font-size:13px;font-weight:500;">
+                            Total issued
+                        </span>
+
+                        <span style="font-size:14px;font-weight:500;">
+                            ${{ total_issued }}
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

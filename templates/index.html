@@ -1,0 +1,1454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StayDesk - Hotel Management System</title>
+    <link href="https://cdn.jsdelivr.net/npm/tabler-icons@2.6.0/font/tabler-icons.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --color-background-primary: #ffffff;
+            --color-background-secondary: #f7f8fa;
+            --color-background-tertiary: #f0f2f5;
+            --color-background-info: #E6F1FB;
+            --color-border-primary: #d1d5db;
+            --color-border-secondary: #e5e7eb;
+            --color-border-tertiary: #e2e8f0;
+            --color-text-primary: #111827;
+            --color-text-secondary: #6b7280;
+            --color-text-tertiary: #9ca3af;
+            --color-text-info: #0C447C;
+            --border-radius-md: 8px;
+            --border-radius-lg: 12px;
+            --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+        }
+        
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: var(--font-sans); background: var(--color-background-tertiary); min-height: 100vh; }
+        
+        .shell { display: flex; min-height: 100vh; }
+        
+        /* Sidebar */
+        .sidebar { width: 220px; background: var(--color-background-primary); border-right: 0.5px solid var(--color-border-tertiary); padding: 20px 0; display: flex; flex-direction: column; position: fixed; height: 100vh; overflow-y: auto; }
+        .sidebar-logo { padding: 0 20px 20px; border-bottom: 0.5px solid var(--color-border-tertiary); margin-bottom: 12px; }
+        .logo-text { font-size: 18px; font-weight: 600; color: var(--color-text-primary); text-decoration: none; display: flex; align-items: center; gap: 8px; }
+        .logo-sub { font-size: 11px; color: var(--color-text-secondary); margin-top: 2px; }
+        .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 20px; font-size: 13px; color: var(--color-text-secondary); text-decoration: none; cursor: pointer; transition: all 0.15s; }
+        .nav-item:hover { background: var(--color-background-secondary); color: var(--color-text-primary); }
+        .nav-item.active { color: #185FA5; background: #E6F1FB; border-right: 2px solid #185FA5; font-weight: 500; }
+        .nav-item i { font-size: 18px; }
+        .nav-section { font-size: 10px; color: var(--color-text-tertiary); padding: 16px 20px 8px; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600; }
+        
+        /* Main Content */
+        .main { flex: 1; margin-left: 220px; padding: 24px; overflow: auto; }
+        .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+        .topbar-title { font-size: 22px; font-weight: 600; color: var(--color-text-primary); }
+        .topbar-date { font-size: 13px; color: var(--color-text-secondary); margin-top: 2px; }
+        .topbar-right { display: flex; gap: 12px; align-items: center; }
+        .avatar { width: 36px; height: 36px; border-radius: 50%; background: #B5D4F4; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: #185FA5; }
+        
+        /* Stats Grid */
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+        .stat-card { background: var(--color-background-primary); border-radius: var(--border-radius-lg); padding: 18px; border: 0.5px solid var(--color-border-tertiary); }
+        .stat-label { font-size: 12px; color: var(--color-text-secondary); margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+        .stat-label i { font-size: 16px; }
+        .stat-value { font-size: 28px; font-weight: 600; color: var(--color-text-primary); }
+        .stat-sub { font-size: 11px; margin-top: 6px; color: var(--color-text-secondary); }
+        .stat-sub.up { color: #3B6D11; }
+        .stat-sub.down { color: #A32D2D; }
+        
+        /* Cards */
+        .card { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 20px; margin-bottom: 20px; }
+        .card-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 8px; }
+        .card-title { font-size: 15px; font-weight: 600; color: var(--color-text-primary); display: flex; align-items: center; gap: 8px; }
+        .card-action { font-size: 12px; color: #185FA5; cursor: pointer; text-decoration: none; font-weight: 500; }
+        .card-action:hover { text-decoration: underline; }
+        
+        /* Tables */
+        .table-container { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th { text-align: left; font-size: 11px; font-weight: 600; color: var(--color-text-secondary); padding: 0 12px 12px; border-bottom: 0.5px solid var(--color-border-tertiary); text-transform: uppercase; letter-spacing: 0.05em; }
+        td { padding: 12px; border-bottom: 0.5px solid var(--color-border-secondary); color: var(--color-text-primary); }
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background: var(--color-background-secondary); }
+        
+        /* Forms */
+        .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+        .form-group { display: flex; flex-direction: column; gap: 4px; }
+        .form-group label { font-size: 12px; color: var(--color-text-secondary); font-weight: 500; }
+        .form-group input, .form-group select, .form-group textarea { font-size: 13px; padding: 8px 12px; border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border-tertiary); background: var(--color-background-secondary); color: var(--color-text-primary); outline: none; transition: border-color 0.15s; }
+        .form-group input:focus, .form-group select:focus { border-color: #185FA5; }
+        
+        /* Buttons */
+        .btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: var(--border-radius-md); font-size: 13px; font-weight: 500; cursor: pointer; border: none; text-decoration: none; transition: all 0.15s; }
+        .btn-primary { background: #185FA5; color: #fff; }
+        .btn-primary:hover { background: #144d8a; }
+        .btn-outline { background: var(--color-background-primary); color: var(--color-text-primary); border: 0.5px solid var(--color-border-secondary); }
+        .btn-outline:hover { background: var(--color-background-secondary); }
+        .btn-success { background: #3B6D11; color: #fff; }
+        .btn-danger { background: #A32D2D; color: #fff; }
+        .btn-sm { padding: 5px 10px; font-size: 12px; }
+        
+        /* Filters */
+        .filters { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+        .filters input, .filters select { font-size: 12px; padding: 6px 10px; border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border-tertiary); background: var(--color-background-secondary); color: var(--color-text-primary); height: 34px; }
+        
+        /* Badges */
+        .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 500; }
+        .badge-booked, .badge-active, .badge-checked-in { background: #C0DD97; color: #27500A; }
+        .badge-checked_out, .badge-checkout { background: #F4C0D1; color: #72243E; }
+        .badge-pending { background: #FAC775; color: #633806; }
+        .badge-cancelled { background: #F7C1C1; color: #791F1F; }
+        .badge-paid { background: #C0DD97; color: #27500A; }
+        .badge-unpaid { background: #FAC775; color: #633806; }
+        .badge-available { background: #C0DD97; color: #27500A; }
+        .badge-occupied { background: #B5D4F4; color: #0C447C; }
+        .badge-maintenance { background: #FAC775; color: #633806; }
+        
+        /* Room Grid */
+        .room-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; }
+        .room-cell { border-radius: 8px; padding: 10px 6px; text-align: center; font-size: 11px; cursor: pointer; transition: transform 0.15s; }
+        .room-cell:hover { transform: scale(1.05); }
+        .room-cell .rnum { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
+        .room-cell .rtype { font-size: 10px; font-weight: 400; text-transform: capitalize; }
+        .r-occupied { background: #B5D4F4; color: #0C447C; }
+        .r-vacant, .r-available { background: #C0DD97; color: #27500A; }
+        .r-maintenance { background: #FAC775; color: #633806; }
+        .r-checkout { background: #F4C0D1; color: #72243E; }
+        
+        /* Legend */
+        .legend { display: flex; gap: 16px; margin-top: 12px; flex-wrap: wrap; }
+        .legend-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--color-text-secondary); }
+        .legend-dot { width: 10px; height: 10px; border-radius: 3px; }
+        
+        /* Actions Grid */
+        .actions-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
+        .action-btn { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-md); padding: 16px 12px; display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; text-decoration: none; transition: all 0.15s; }
+        .action-btn:hover { background: var(--color-background-secondary); transform: translateY(-1px); }
+        .action-btn i { font-size: 24px; }
+        .action-btn span { font-size: 12px; color: var(--color-text-secondary); text-align: center; font-weight: 500; }
+        .action-btn.danger i { color: #A32D2D; }
+        .action-btn.primary i { color: #185FA5; }
+        .action-btn.success i { color: #3B6D11; }
+        .action-btn.warning i { color: #854F0B; }
+        
+        /* Donut Chart */
+        .donut-wrap { display: flex; align-items: center; gap: 20px; }
+        .donut-legend { display: flex; flex-direction: column; gap: 8px; }
+        .donut-leg-item { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+        .donut-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+        
+        /* Mini List */
+        .mini-list { display: flex; flex-direction: column; gap: 0; }
+        .mini-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 0.5px solid var(--color-border-tertiary); font-size: 13px; }
+        .mini-row:last-child { border-bottom: none; }
+        .mini-guest { display: flex; align-items: center; gap: 10px; }
+        .mini-av { width: 32px; height: 32px; border-radius: 50%; background: var(--color-background-info); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; color: var(--color-text-info); text-transform: uppercase; }
+        
+        /* Guest Info */
+        .guest-info { display: flex; align-items: center; gap: 10px; }
+        .av { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; flex-shrink: 0; text-transform: uppercase; }
+        
+        /* Source Badge */
+        .source-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; background: var(--color-background-secondary); color: var(--color-text-secondary); }
+        
+        /* Action Icons */
+        .action-icons { display: flex; gap: 6px; }
+        .icon-btn { background: none; border: none; cursor: pointer; color: var(--color-text-secondary); font-size: 16px; padding: 4px; text-decoration: none; }
+        .icon-btn:hover { color: #185FA5; }
+        
+        /* Rate Pill */
+        .rate-pill { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; background: #E6F1FB; color: #0C447C; font-weight: 500; }
+        
+        /* Two Column */
+        .two-col { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+        
+        /* Form Section */
+        .form-section { font-size: 12px; font-weight: 600; color: var(--color-text-secondary); margin: 16px 0 10px; padding-bottom: 6px; border-bottom: 0.5px solid var(--color-border-tertiary); text-transform: uppercase; letter-spacing: 0.06em; }
+        
+        /* Flash Messages */
+        .flash-messages { margin-bottom: 16px; }
+        .flash { padding: 12px 16px; border-radius: var(--border-radius-md); margin-bottom: 8px; font-size: 13px; }
+        .flash.success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .flash.error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        
+        /* Checkbox Group */
+        .checkbox-group { display: flex; flex-wrap: wrap; gap: 8px; }
+        .checkbox-item { display: flex; align-items: center; gap: 4px; font-size: 12px; }
+        
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .actions-grid { grid-template-columns: repeat(2, 1fr); }
+            .room-grid { grid-template-columns: repeat(4, 1fr); }
+        }
+        
+        @media (max-width: 768px) {
+            .sidebar { width: 60px; }
+            .sidebar .logo-text span, .sidebar .logo-sub, .sidebar .nav-item span:not(.nav-section) { display: none; }
+            .main { margin-left: 60px; }
+            .stats-grid { grid-template-columns: 1fr; }
+            .actions-grid { grid-template-columns: 1fr; }
+            .form-grid { grid-template-columns: 1fr; }
+            .two-col { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="shell">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-logo">
+                <a href="{{ url_for('dashboard.dashboard') }}" class="logo-text">
+                    <i class="ti ti-building" aria-hidden="true"></i>
+                    <span>StayDesk</span>
+                </a>
+                <div class="logo-sub">Hotel Management</div>
+            </div>
+            
+            <div class="nav-section">Main</div>
+            <a href="{{ url_for('dashboard.dashboard') }}" class="nav-item {% if active == 'dashboard' %}active{% endif %}">
+                <i class="ti ti-layout-dashboard" aria-hidden="true"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="{{ url_for('reservations.reservations_screen') }}" class="nav-item {% if active == 'reservations' %}active{% endif %}">
+                <i class="ti ti-calendar" aria-hidden="true"></i>
+                <span>Reservations</span>
+            </a>
+            <a href="{{ url_for('rooms.rooms_screen') }}" class="nav-item {% if active == 'rooms' %}active{% endif %}">
+                <i class="ti ti-door" aria-hidden="true"></i>
+                <span>Rooms</span>
+            </a>
+            <a href="{{ url_for('guests.guests_screen') }}" class="nav-item {% if active == 'guests' %}active{% endif %}">
+                <i class="ti ti-users" aria-hidden="true"></i>
+                <span>Guests</span>
+            </a>
+            
+            <div class="nav-section">Finance</div>
+            <a href="{{ url_for('invoices.invoices_screen') }}" class="nav-item {% if active == 'invoices' %}active{% endif %}">
+                <i class="ti ti-receipt" aria-hidden="true"></i>
+                <span>Invoices</span>
+            </a>
+            <a href="{{ url_for('rates.rates_screen') }}" class="nav-item {% if active == 'rates' %}active{% endif %}">
+                <i class="ti ti-tag" aria-hidden="true"></i>
+                <span>Rates</span>
+            </a>
+            <a href="{{ url_for('extras.extras_screen') }}" class="nav-item {% if active == 'extras' %}active{% endif %}">
+                <i class="ti ti-star" aria-hidden="true"></i>
+                <span>Extras</span>
+            </a>
+            
+            <div class="nav-section">Operations</div>
+            <a href="{{ url_for('services.services_screen') }}" class="nav-item {% if active == 'services' %}active{% endif %}">
+                <i class="ti ti-tools" aria-hidden="true"></i>
+                <span>Services</span>
+            </a>
+            
+            <div style="margin-top: auto; padding: 0 20px;">
+                <div class="nav-item" style="padding: 10px 0;">
+                    <i class="ti ti-settings" aria-hidden="true"></i>
+                    <span>Settings</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="main">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="flash-messages">
+                        {% for category, message in messages %}
+                            <div class="flash {{ category }}">{{ message }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+            
+            <!-- DASHBOARD SCREEN -->
+            {% if active == 'dashboard' %}
+            <div class="topbar">
+                <div>
+                    <div class="topbar-title">Dashboard</div>
+                    <div class="topbar-date">{{ current_date }}</div>
+                </div>
+                <div class="topbar-right">
+                    <div style="position:relative;">
+                        <i class="ti ti-bell" aria-hidden="true" style="font-size:20px; color:var(--color-text-secondary); cursor:pointer;"></i>
+                        <span style="position:absolute; top:-4px; right:-4px; background:#E24B4A; color:#fff; font-size:9px; border-radius:50%; width:15px; height:15px; display:flex; align-items:center; justify-content:center;">3</span>
+                    </div>
+                    <div class="avatar">AM</div>
+                </div>
+            </div>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label"><i class="ti ti-door-enter" aria-hidden="true" style="color:#185FA5;"></i> Occupied rooms</div>
+                    <div class="stat-value">{{ stats.occupied }}</div>
+                    <div class="stat-sub up">Live from DB</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label"><i class="ti ti-door" aria-hidden="true" style="color:#3B6D11;"></i> Vacant rooms</div>
+                    <div class="stat-value">{{ stats.vacant }}</div>
+                    <div class="stat-sub down">Available Inventory</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label"><i class="ti ti-logout" aria-hidden="true" style="color:#854F0B;"></i> Checkouts today</div>
+                    <div class="stat-value">{{ stats.checkouts_today }}</div>
+                    <div class="stat-sub" style="color:var(--color-text-secondary);">Scheduled for departure</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label"><i class="ti ti-login" aria-hidden="true" style="color:#3B6D11;"></i> Check-ins today</div>
+                    <div class="stat-value">{{ stats.checkins_today }}</div>
+                    <div class="stat-sub" style="color:var(--color-text-secondary);">Expected arrivals</div>
+                </div>
+            </div>
+            
+            <div class="actions-grid">
+                <a href="{{ url_for('reservations.reservations_screen') }}" class="action-btn primary">
+                    <i class="ti ti-calendar-plus" aria-hidden="true"></i>
+                    <span>New reservation</span>
+                </a>
+                <a href="{{ url_for('reservations.reservations_screen') }}" class="action-btn success">
+                    <i class="ti ti-login" aria-hidden="true"></i>
+                    <span>Check-in guest</span>
+                </a>
+                <a href="{{ url_for('reservations.reservations_screen') }}" class="action-btn warning">
+                    <i class="ti ti-logout" aria-hidden="true"></i>
+                    <span>Checkout guest</span>
+                </a>
+                <a href="{{ url_for('rooms.rooms_screen') }}" class="action-btn">
+                    <i class="ti ti-building-plus" aria-hidden="true" style="color:#534AB7;"></i>
+                    <span>Manage rooms</span>
+                </a>
+            </div>
+            
+            <div class="two-col">
+                <div class="card">
+                    <div class="card-head">
+                        <div class="card-title">Room map — floor overview</div>
+                        <a href="{{ url_for('rooms.rooms_screen') }}" class="card-action">All rooms →</a>
+                    </div>
+                    <div class="room-grid">
+                        {% for room in room_map %}
+                        <div class="room-cell r-{{ room.status|lower }}">
+                            <div class="rnum">{{ room.room_number }}</div>
+                            <div class="rtype">{{ room.type_name }}</div>
+                        </div>
+                        {% else %}
+                        <div style="font-size: 12px; color: var(--color-text-secondary); padding: 10px; grid-column: span 6;">
+                            No rooms initialized in database.
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div class="legend">
+                        <div class="legend-item"><div class="legend-dot" style="background:#378ADD;"></div> Occupied</div>
+                        <div class="legend-item"><div class="legend-dot" style="background:#639922;"></div> Vacant</div>
+                        <div class="legend-item"><div class="legend-dot" style="background:#D4537E;"></div> Checkout due</div>
+                        <div class="legend-item"><div class="legend-dot" style="background:#BA7517;"></div> Maintenance</div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-head">
+                        <div class="card-title">Today's activity</div>
+                        <a href="{{ url_for('reservations.reservations_screen') }}" class="card-action">View all →</a>
+                    </div>
+                    <div class="mini-list">
+                        {% for activity in today_activities %}
+                        <div class="mini-row">
+                            <div class="mini-guest">
+                                <div class="mini-av" style="background:#B5D4F4; color:#0C447C;">
+                                    {{ activity.first_name[0] }}{{ activity.last_name[0] }}
+                                </div>
+                                <div>
+                                    <div style="font-weight:500; font-size:12px;">{{ activity.first_name }} {{ activity.last_name }}</div>
+                                    <div style="font-size:10px; color:var(--color-text-secondary);">Room {{ activity.room_number }} · {{ activity.type_name }}</div>
+                                </div>
+                            </div>
+                            <span class="badge badge-booked">{{ activity.booking_status }}</span>
+                        </div>
+                        {% else %}
+                        <div style="font-size: 12px; color: var(--color-text-secondary); padding: 20px 0; text-align: center;">
+                            No activities logged for today.
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-head">
+                    <div class="card-title">Upcoming reservations</div>
+                    <a href="{{ url_for('reservations.reservations_screen') }}" class="card-action">View all →</a>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Guest</th>
+                                <th>Room</th>
+                                <th>Check-in</th>
+                                <th>Check-out</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for booking in upcoming_bookings %}
+                            <tr>
+                                <td>{{ booking.first_name }} {{ booking.last_name }}</td>
+                                <td>Room {{ booking.room_number }}</td>
+                                <td>{{ booking.planned_checkin }}</td>
+                                <td>{{ booking.planned_checkout }}</td>
+                                <td><span class="badge badge-{{ booking.status|lower }}">{{ booking.status }}</span></td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="5" style="text-align: center; color: var(--color-text-secondary); padding: 20px 0;">
+                                    No upcoming bookings found.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-head">
+                    <div class="card-title">Occupancy breakdown</div>
+                </div>
+                <div class="donut-wrap">
+                    <svg width="120" height="120" viewBox="0 0 100 100">
+                        <circle cx="50" cy="50" r="38" fill="none" stroke="#E6F1FB" stroke-width="14"/>
+                        <circle cx="50" cy="50" r="38" fill="none" stroke="#378ADD" stroke-width="14" 
+                                stroke-dasharray="{{ stats.occupancy_rate }} {{ 239 - stats.occupancy_rate }}" stroke-dashoffset="0" transform="rotate(-90 50 50)"/>
+                        <text x="50" y="46" text-anchor="middle" font-size="16" font-weight="600" fill="var(--color-text-primary)">{{ stats.occupancy_rate }}%</text>
+                        <text x="50" y="58" text-anchor="middle" font-size="10" fill="var(--color-text-secondary)">occupied</text>
+                    </svg>
+                    <div class="donut-legend">
+                        <div class="donut-leg-item"><div class="donut-dot" style="background:#378ADD;"></div><span style="color:var(--color-text-primary);">Occupied — {{ stats.occupied }}</span></div>
+                        <div class="donut-leg-item"><div class="donut-dot" style="background:#639922;"></div><span style="color:var(--color-text-primary);">Vacant — {{ stats.vacant }}</span></div>
+                        <div class="donut-leg-item"><div class="donut-dot" style="background:#D4537E;"></div><span style="color:var(--color-text-primary);">Checkout due — {{ stats.checkouts_today }}</span></div>
+                        <div class="donut-leg-item"><div class="donut-dot" style="background:#EF9F27;"></div><span style="color:var(--color-text-primary);">Maintenance — {{ stats.maintenance }}</span></div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- GUESTS SCREEN -->
+            {% if active == 'guests' %}
+            <div class="topbar">
+                <div>
+                    <div class="topbar-title">Guests</div>
+                    <div class="topbar-date">{{ current_date }}</div>
+                </div>
+                <div class="avatar">GM</div>
+            </div>
+            
+            <div class="card">
+                <div class="card-head">
+                    <div class="card-title">Guest Directory</div>
+                    <form method="GET" action="{{ url_for('guests.guests_screen') }}" class="filters">
+                        <input type="text" name="search" placeholder="Search guests..." value="{{ search }}">
+                        <button type="submit" class="btn btn-primary btn-sm">
+                            <i class="ti ti-search"></i> Search
+                        </button>
+                    </form>
+                </div>
+                
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Guest Name</th>
+                                <th>Email</th>
+                                <th>Phone</th>
+                                <th>ID Type</th>
+                                <th>ID Number</th>
+                                <th>Bookings</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for guest_data in guests %}
+                            <tr>
+                                <td>{{ guest_data.guest.customer_id }}</td>
+                                <td>
+                                    <div class="guest-info">
+                                        <div class="av" style="background:#B5D4F4; color:#0C447C;">
+                                            {{ guest_data.guest.first_name[0] }}{{ guest_data.guest.last_name[0] }}
+                                        </div>
+                                        {{ guest_data.guest.first_name }} {{ guest_data.guest.last_name }}
+                                        {% if guest_data.is_repeat %}
+                                            <span class="badge badge-pending" style="font-size:10px;">Repeat</span>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td>{{ guest_data.guest.email }}</td>
+                                <td>{{ guest_data.guest.phone }}</td>
+                                <td>{{ guest_data.guest.id_type or '-' }}</td>
+                                <td>{{ guest_data.guest.id_number or '-' }}</td>
+                                <td>{{ guest_data.booking_count }}</td>
+                                <td>
+                                    <div class="action-icons">
+                                        <a href="{{ url_for('guests.guest_detail', id=guest_data.guest.customer_id) }}" class="icon-btn" title="View">
+                                            <i class="ti ti-eye"></i>
+                                        </a>
+                                        <a href="{{ url_for('guests.delete_guest', id=guest_data.guest.customer_id) }}" class="icon-btn" style="color:#A32D2D;" title="Delete" onclick="return confirm('Delete this guest?');">
+                                            <i class="ti ti-trash"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="8" style="text-align:center; padding:20px; color:var(--color-text-secondary);">
+                                    No guests found.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-head">
+                    <div class="card-title"><i class="ti ti-user-plus" style="margin-right:6px; color:#185FA5;"></i> Add New Guest</div>
+                </div>
+                <form action="{{ url_for('guests.add_guest') }}" method="POST">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>First Name *</label>
+                            <input type="text" name="first_name" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Last Name *</label>
+                            <input type="text" name="last_name" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Email *</label>
+                            <input type="email" name="email" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Phone</label>
+                            <input type="text" name="phone">
+                        </div>
+                        <div class="form-group">
+                            <label>ID Type</label>
+                            <select name="id_type">
+                                <option value="">Select type</option>
+                                <option value="CNIC">CNIC</option>
+                                <option value="Passport">Passport</option>
+                                <option value="Driving License">Driving License</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>ID Number</label>
+                            <input type="text" name="id_number">
+                        </div>
+                    </div>
+                    <div style="margin-top:16px; display:flex; justify-content:flex-end;">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="ti ti-device-floppy"></i> Add Guest
+                        </button>
+                    </div>
+                </form>
+            </div>
+            {% endif %}
+            
+            <!-- RESERVATIONS SCREEN -->
+            {% if active == 'reservations' %}
+            <div class="topbar">
+                <div>
+                    <div class="topbar-title">Reservations</div>
+                    <div class="topbar-date">{{ current_date }}</div>
+                </div>
+                <div class="avatar">RM</div>
+            </div>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label"><i class="ti ti-calendar-check" style="color:#185FA5;"></i> Total bookings</div>
+                    <div class="stat-value">{{ stats.total_bookings }}</div>
+                    <div class="stat-sub">This month</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label"><i class="ti ti-clock" style="color:#854F0B;"></i> Pending bookings</div>
+                    <div class="stat-value">{{ stats.pending_bookings }}</div>
+                    <div class="stat-sub">Awaiting confirmation</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label"><i class="ti ti-walk" style="color:#534AB7;"></i> Walk-ins today</div>
+                    <div class="stat-value">{{ stats.walkins_today }}</div>
+                    <div class="stat-sub">Direct arrivals</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label"><i class="ti ti-x" style="color:#A32D2D;"></i> Cancellations</div>
+                    <div class="stat-value">{{ stats.cancellations }}</div>
+                    <div class="stat-sub">This month</div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-head">
+                    <div class="card-title">All Reservations</div>
+                    <form method="GET" action="{{ url_for('reservations.reservations_screen') }}" class="filters">
+                        <input type="text" name="search" placeholder="Search guest / ID" value="{{ search }}" style="width:180px;">
+                        <select name="status" onchange="this.form.submit()" style="width:120px;">
+                            <option value="">All statuses</option>
+                            <option value="booked" {% if status_filter == 'booked' %}selected{% endif %}>Booked</option>
+                            <option value="checked_in" {% if status_filter == 'checked_in' %}selected{% endif %}>Checked In</option>
+                            <option value="checkout" {% if status_filter == 'checkout' %}selected{% endif %}>Checkout</option>
+                            <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
+                        </select>
+                        <select name="source" onchange="this.form.submit()" style="width:120px;">
+                            <option value="">All sources</option>
+                            <option value="Direct">Direct</option>
+                            <option value="Online">Online</option>
+                            <option value="Walk-in">Walk-in</option>
+                            <option value="Corporate">Corporate</option>
+                        </select>
+                        <button type="button" class="btn btn-primary btn-sm" onclick="document.getElementById('new-booking-form').scrollIntoView({behavior: 'smooth'});">
+                            <i class="ti ti-plus"></i> New
+                        </button>
+                    </form>
+                </div>
+                
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Booking ID</th>
+                                <th>Guest</th>
+                                <th>Room</th>
+                                <th>Rate</th>
+                                <th>Check-in</th>
+                                <th>Check-out</th>
+                                <th>Guests</th>
+                                <th>Source</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for booking_data in bookings %}
+                            <tr>
+                                <td style="color:#185FA5; font-weight:500;">#BK-{{ booking_data.booking.booking_id }}</td>
+                                <td>
+                                    <div class="guest-info">
+                                        <div class="av" style="background:#B5D4F4; color:#0C447C;">
+                                            {{ booking_data.customer.first_name[0] }}{{ booking_data.customer.last_name[0] }}
+                                        </div>
+                                        <div>
+                                            <div style="font-weight:500;">{{ booking_data.customer.first_name }} {{ booking_data.customer.last_name }}</div>
+                                            <div style="font-size:10px; color:var(--color-text-secondary);">
+                                                {% if booking_data.is_repeat %}Repeat guest{% else %}New guest{% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>Room {{ booking_data.room_number }}</td>
+                                <td><span class="rate-pill">{{ booking_data.rate_name }}</span></td>
+                                <td>{{ booking_data.booking.planned_checkin.strftime('%d %b') }}</td>
+                                <td>{{ booking_data.booking.planned_checkout.strftime('%d %b') }}</td>
+                                <td>{{ booking_data.num_guests }}</td>
+                                <td><span class="source-badge">{{ booking_data.booking.booking_source }}</span></td>
+                                <td><span class="badge badge-{{ booking_data.booking.status|lower }}">{{ booking_data.booking.status }}</span></td>
+                                <td>
+                                    <div class="action-icons">
+                                        {% if booking_data.booking.status == 'booked' %}
+                                        <form method="POST" action="{{ url_for('reservations.checkin_reservation', id=booking_data.booking.booking_id) }}" style="display:inline;">
+                                            <button type="submit" class="icon-btn" title="Check-in" style="color:#3B6D11;">
+                                                <i class="ti ti-login"></i>
+                                            </button>
+                                        </form>
+                                        {% endif %}
+                                        {% if booking_data.booking.status == 'checked_in' %}
+                                        <form method="POST" action="{{ url_for('reservations.checkout_reservation', id=booking_data.booking.booking_id) }}" style="display:inline;">
+                                            <button type="submit" class="icon-btn" title="Check-out" style="color:#854F0B;">
+                                                <i class="ti ti-logout"></i>
+                                            </button>
+                                        </form>
+                                        {% endif %}
+                                        <form method="POST" action="{{ url_for('reservations.delete_reservation', id=booking_data.booking.booking_id) }}" style="display:inline;" onsubmit="return confirm('Delete this reservation?');">
+                                            <button type="submit" class="icon-btn" style="color:#A32D2D;" title="Delete">
+                                                <i class="ti ti-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="10" style="text-align:center; padding:20px; color:var(--color-text-secondary);">
+                                    No reservations found.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="card" id="new-booking-form">
+                <div class="card-head">
+                    <div class="card-title"><i class="ti ti-calendar-plus" style="margin-right:6px; color:#185FA5;"></i> New Booking</div>
+                </div>
+                <form action="{{ url_for('reservations.add_reservation') }}" method="POST">
+                    <div class="form-section">Guest Details</div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Customer *</label>
+                            <select name="customer_id" required>
+                                <option value="">Select customer</option>
+                                {% for customer in customers %}
+                                <option value="{{ customer.customer_id }}">{{ customer.first_name }} {{ customer.last_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Booking Source</label>
+                            <select name="booking_source">
+                                <option value="Direct">Direct</option>
+                                <option value="Online">Online</option>
+                                <option value="Walk-in">Walk-in</option>
+                                <option value="Corporate">Corporate</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-section">Stay Details</div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Room Type *</label>
+                            <select name="room_type_id" required>
+                                <option value="">Select room type</option>
+                                {% for rt in room_types %}
+                                <option value="{{ rt.room_type_id }}">{{ rt.type_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Rate *</label>
+                            <select name="rate_id" required>
+                                <option value="">Select rate</option>
+                                {% for rate in rates %}
+                                <option value="{{ rate.rate_id }}">{{ rate.rate_type.rate_name }} - PKR {{ rate.amount }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Check-in Date *</label>
+                            <input type="date" name="planned_checkin" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Check-out Date *</label>
+                            <input type="date" name="planned_checkout" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Number of Guests *</label>
+                            <input type="number" name="num_guests" min="1" value="1" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Status</label>
+                            <select name="status">
+                                <option value="booked">Booked</option>
+                                <option value="pending">Pending</option>
+                                <option value="checked_in">Checked In</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top:16px; display:flex; justify-content:flex-end;">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="ti ti-device-floppy"></i> Create Booking
+                        </button>
+                    </div>
+                </form>
+            </div>
+            {% endif %}
+            
+            <!-- ROOMS SCREEN -->
+            {% if active == 'rooms' %}
+            <div class="topbar">
+                <div>
+                    <div class="topbar-title">Room Management</div>
+                    <div class="topbar-date">{{ current_date }}</div>
+                </div>
+                <div class="avatar">RM</div>
+            </div>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label"><i class="ti ti-door" style="color:#185FA5;"></i> Total Rooms</div>
+                    <div class="stat-value">{{ stats.total_rooms }}</div>
+                    <div class="stat-sub">All floors</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label"><i class="ti ti-check" style="color:#3B6D11;"></i> Available</div>
+                    <div class="stat-value">{{ stats.vacant }}</div>
+                    <div class="stat-sub up">Ready for guests</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label"><i class="ti ti-user" style="color:#185FA5;"></i> Occupied</div>
+                    <div class="stat-value">{{ stats.occupied }}</div>
+                    <div class="stat-sub">Currently occupied</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label"><i class="ti ti-tools" style="color:#854F0B;"></i> Maintenance</div>
+                    <div class="stat-value">{{ stats.maintenance }}</div>
+                    <div class="stat-sub down">Under maintenance</div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-head">
+                    <div class="card-title">Room Inventory</div>
+                    <form method="GET" action="{{ url_for('rooms.rooms_screen') }}" class="filters">
+                        <input type="text" name="search" placeholder="Search room..." value="{{ search }}">
+                        <select name="room_type" onchange="this.form.submit()">
+                            <option value="">All types</option>
+                            {% for rt in room_types %}
+                            <option value="{{ rt.room_type_id }}" {% if room_type_filter == rt.room_type_id|string %}selected{% endif %}>{{ rt.type_name }}</option>
+                            {% endfor %}
+                        </select>
+                        <select name="status" onchange="this.form.submit()">
+                            <option value="">All statuses</option>
+                            <option value="available" {% if status_filter == 'available' %}selected{% endif %}>Available</option>
+                            <option value="occupied" {% if status_filter == 'occupied' %}selected{% endif %}>Occupied</option>
+                            <option value="maintenance" {% if status_filter == 'maintenance' %}selected{% endif %}>Maintenance</option>
+                        </select>
+                        <button type="button" class="btn btn-primary btn-sm" onclick="document.getElementById('new-room-form').scrollIntoView({behavior: 'smooth'});">
+                            <i class="ti ti-plus"></i> Add
+                        </button>
+                    </form>
+                </div>
+                
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Room #</th>
+                                <th>Floor</th>
+                                <th>Type</th>
+                                <th>Status</th>
+                                <th>Attributes</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for room in rooms %}
+                            <tr>
+                                <td style="font-weight:500;">{{ room.room_number }}</td>
+                                <td>Floor {{ room.floor_number }}</td>
+                                <td>{{ room.room_type.type_name }}</td>
+                                <td><span class="badge badge-{{ room.status|lower }}">{{ room.status }}</span></td>
+                                <td>
+                                    {% for attr in room.attributes %}
+                                    <span class="rate-pill" style="font-size:10px;">{{ attr.attribute_name }}</span>
+                                    {% endfor %}
+                                </td>
+                                <td>
+                                    <div class="action-icons">
+                                        <select onchange="location.href=this.value" class="btn btn-sm" style="padding:4px 8px; font-size:11px;">
+                                            <option value="">Change status</option>
+                                            <option value="{{ url_for('rooms.update_room_status', id=room.room_id, status='available') }}">Available</option>
+                                            <option value="{{ url_for('rooms.update_room_status', id=room.room_id, status='occupied') }}">Occupied</option>
+                                            <option value="{{ url_for('rooms.update_room_status', id=room.room_id, status='maintenance') }}">Maintenance</option>
+                                            <option value="{{ url_for('rooms.update_room_status', id=room.room_id, status='checkout') }}">Checkout</option>
+                                        </select>
+                                        <a href="{{ url_for('rooms.delete_room', id=room.room_id) }}" class="icon-btn" style="color:#A32D2D;" onclick="return confirm('Delete this room?');">
+                                            <i class="ti ti-trash"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="6" style="text-align:center; padding:20px; color:var(--color-text-secondary);">
+                                    No rooms found.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="card" id="new-room-form">
+                <div class="card-head">
+                    <div class="card-title"><i class="ti ti-building-plus" style="margin-right:6px; color:#534AB7;"></i> Add New Room</div>
+                </div>
+                <form action="{{ url_for('rooms.add_room') }}" method="POST">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Room Number *</label>
+                            <input type="text" name="room_number" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Floor Number *</label>
+                            <input type="number" name="floor_number" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Room Type *</label>
+                            <select name="room_type_id" required>
+                                <option value="">Select type</option>
+                                {% for rt in room_types %}
+                                <option value="{{ rt.room_type_id }}">{{ rt.type_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Status</label>
+                            <select name="status">
+                                <option value="available">Available</option>
+                                <option value="occupied">Occupied</option>
+                                <option value="maintenance">Maintenance</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-section">Attributes</div>
+                    <div class="checkbox-group">
+                        {% for attr in attributes %}
+                        <label class="checkbox-item">
+                            <input type="checkbox" name="attributes" value="{{ attr.attribute_id }}">
+                            {{ attr.attribute_name }}
+                        </label>
+                        {% endfor %}
+                    </div>
+                    <div style="margin-top:16px; display:flex; justify-content:flex-end;">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="ti ti-device-floppy"></i> Add Room
+                        </button>
+                    </div>
+                </form>
+            </div>
+            {% endif %}
+            
+            <!-- INVOICES SCREEN -->
+            {% if active == 'invoices' %}
+            <div class="topbar">
+                <div>
+                    <div class="topbar-title">Invoices</div>
+                    <div class="topbar-date">{{ current_date }}</div>
+                </div>
+                <div class="avatar">FIN</div>
+            </div>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label"><i class="ti ti-cash" style="color:#3B6D11;"></i> Total Revenue</div>
+                    <div class="stat-value">PKR {{ "%.0f"|format(stats.total_revenue) }}</div>
+                    <div class="stat-sub up">Collected</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label"><i class="ti ti-clock" style="color:#854F0B;"></i> Pending</div>
+                    <div class="stat-value">PKR {{ "%.0f"|format(stats.pending_revenue) }}</div>
+                    <div class="stat-sub down">Awaiting payment</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label"><i class="ti ti-receipt" style="color:#185FA5;"></i> Paid Invoices</div>
+                    <div class="stat-value">{{ stats.paid_invoices }}</div>
+                    <div class="stat-sub">Completed</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label"><i class="ti ti-alert-circle" style="color:#A32D2D;"></i> Unpaid</div>
+                    <div class="stat-value">{{ stats.unpaid_invoices }}</div>
+                    <div class="stat-sub">Pending</div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-head">
+                    <div class="card-title">All Invoices</div>
+                    <form method="GET" action="{{ url_for('invoices.invoices_screen') }}" class="filters">
+                        <input type="text" name="search" placeholder="Search..." value="{{ search }}">
+                        <select name="status" onchange="this.form.submit()">
+                            <option value="">All statuses</option>
+                            <option value="paid" {% if status_filter == 'paid' %}selected{% endif %}>Paid</option>
+                            <option value="unpaid" {% if status_filter == 'unpaid' %}selected{% endif %}>Unpaid</option>
+                        </select>
+                    </form>
+                </div>
+                
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Invoice #</th>
+                                <th>Guest</th>
+                                <th>Booking #</th>
+                                <th>Issue Date</th>
+                                <th>Subtotal</th>
+                                <th>Tax (16%)</th>
+                                <th>Total</th>
+                                <th>Paid</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for invoice_data in invoices %}
+                            <tr>
+                                <td style="color:#185FA5; font-weight:500;">#INV-{{ invoice_data.invoice.invoice_id }}</td>
+                                <td>
+                                    <div class="guest-info">
+                                        <div class="av" style="background:#B5D4F4; color:#0C447C;">
+                                            {{ invoice_data.customer.first_name[0] }}{{ invoice_data.customer.last_name[0] }}
+                                        </div>
+                                        {{ invoice_data.customer.first_name }} {{ invoice_data.customer.last_name }}
+                                    </div>
+                                </td>
+                                <td>#BK-{{ invoice_data.booking.booking_id }}</td>
+                                <td>{{ invoice_data.invoice.issued_date.strftime('%d %b %Y') }}</td>
+                                <td>PKR {{ "%.0f"|format(invoice_data.invoice.subtotal) }}</td>
+                                <td>PKR {{ "%.0f"|format(invoice_data.invoice.tax_amount) }}</td>
+                                <td style="font-weight:600;">PKR {{ "%.0f"|format(invoice_data.invoice.total_amount) }}</td>
+                                <td>PKR {{ "%.0f"|format(invoice_data.invoice.paid_amount) }}</td>
+                                <td><span class="badge badge-{{ invoice_data.invoice.payment_status|lower }}">{{ invoice_data.invoice.payment_status }}</span></td>
+                                <td>
+                                    <div class="action-icons">
+                                        <a href="{{ url_for('invoices.invoice_detail', id=invoice_data.invoice.invoice_id) }}" class="icon-btn" title="View">
+                                            <i class="ti ti-eye"></i>
+                                        </a>
+                                        {% if invoice_data.invoice.payment_status == 'unpaid' %}
+                                        <a href="{{ url_for('invoices.mark_paid', id=invoice_data.invoice.invoice_id) }}" class="icon-btn" style="color:#3B6D11;" title="Mark as paid">
+                                            <i class="ti ti-check"></i>
+                                        </a>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="10" style="text-align:center; padding:20px; color:var(--color-text-secondary);">
+                                    No invoices found.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- SERVICES SCREEN -->
+            {% if active == 'services' %}
+            <div class="topbar">
+                <div>
+                    <div class="topbar-title">Services</div>
+                    <div class="topbar-date">{{ current_date }}</div>
+                </div>
+                <div class="avatar">SVC</div>
+            </div>
+            
+            <div class="two-col">
+                <div class="card">
+                    <div class="card-head">
+                        <div class="card-title">Service Categories</div>
+                    </div>
+                    <div class="mini-list">
+                        {% for category in categories %}
+                        <div class="mini-row">
+                            <div style="font-weight:500;">{{ category.category_name }}</div>
+                            <div class="action-icons">
+                                <a href="#" class="icon-btn"><i class="ti ti-edit"></i></a>
+                                <a href="{{ url_for('services.delete_category', id=category.category_id) }}" class="icon-btn" style="color:#A32D2D;" onclick="return confirm('Delete this category?');">
+                                    <i class="ti ti-trash"></i>
+                                </a>
+                            </div>
+                        </div>
+                        {% else %}
+                        <div style="padding:20px; color:var(--color-text-secondary); text-align:center;">No categories found.</div>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-head">
+                        <div class="card-title"><i class="ti ti-folder-plus" style="margin-right:6px; color:#185FA5;"></i> Add Category</div>
+                    </div>
+                    <form action="{{ url_for('services.add_category') }}" method="POST">
+                        <div class="form-group">
+                            <label>Category Name *</label>
+                            <input type="text" name="category_name" required>
+                        </div>
+                        <div style="margin-top:12px;">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="ti ti-plus"></i> Add Category
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            {% for cat_items in service_items %}
+            <div class="card">
+                <div class="card-head">
+                    <div class="card-title">{{ cat_items.category.category_name }}</div>
+                    <button class="btn btn-primary btn-sm" onclick="document.getElementById('item-form-{{ cat_items.category.category_id }}').style.display='block';">
+                        <i class="ti ti-plus"></i> Add Item
+                    </button>
+                </div>
+                
+                <div id="item-form-{{ cat_items.category.category_id }}" style="display:none; margin-bottom:16px; padding:16px; background:var(--color-background-secondary); border-radius:var(--border-radius-md);">
+                    <form action="{{ url_for('services.add_service_item') }}" method="POST">
+                        <input type="hidden" name="category_id" value="{{ cat_items.category.category_id }}">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Item Name *</label>
+                                <input type="text" name="item_name" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Unit Price (PKR) *</label>
+                                <input type="number" name="unit_price" step="0.01" required>
+                            </div>
+                        </div>
+                        <div style="margin-top:12px; display:flex; justify-content:flex-end; gap:8px;">
+                            <button type="button" class="btn btn-outline btn-sm" onclick="document.getElementById('item-form-{{ cat_items.category.category_id }}').style.display='none';">Cancel</button>
+                            <button type="submit" class="btn btn-primary btn-sm">Add Item</button>
+                        </div>
+                    </form>
+                </div>
+                
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Item Name</th>
+                                <th>Unit Price</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in cat_items.items %}
+                            <tr>
+                                <td>{{ item.item_name }}</td>
+                                <td>PKR {{ "%.2f"|format(item.unit_price) }}</td>
+                                <td>
+                                    <div class="action-icons">
+                                        <a href="{{ url_for('services.delete_service_item', id=item.service_item_id) }}" class="icon-btn" style="color:#A32D2D;" onclick="return confirm('Delete this item?');">
+                                            <i class="ti ti-trash"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="3" style="text-align:center; padding:12px; color:var(--color-text-secondary);">
+                                    No items in this category.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% endfor %}
+            {% endif %}
+            
+            <!-- EXTRAS SCREEN -->
+            {% if active == 'extras' %}
+            <div class="topbar">
+                <div>
+                    <div class="topbar-title">Extras</div>
+                    <div class="topbar-date">{{ current_date }}</div>
+                </div>
+                <div class="avatar">EXT</div>
+            </div>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label"><i class="ti ti-star" style="color:#854F0B;"></i> Total Extras</div>
+                    <div class="stat-value">{{ stats.total_extras }}</div>
+                    <div class="stat-sub">Available add-ons</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label"><i class="ti ti-cash" style="color:#3B6D11;"></i> Total Value</div>
+                    <div class="stat-value">PKR {{ "%.0f"|format(stats.total_value) }}</div>
+                    <div class="stat-sub up">Combined value</div>
+                </div>
+            </div>
+            
+            <div class="two-col">
+                <div class="card">
+                    <div class="card-head">
+                        <div class="card-title">All Extras</div>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Price</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for extra in extras %}
+                                <tr>
+                                    <td style="font-weight:500;">{{ extra.extra_name }}</td>
+                                    <td>PKR {{ "%.2f"|format(extra.price) }}</td>
+                                    <td>
+                                        <div class="action-icons">
+                                            <a href="{{ url_for('extras.delete_extra', id=extra.extra_id) }}" class="icon-btn" style="color:#A32D2D;" onclick="return confirm('Delete this extra?');">
+                                                <i class="ti ti-trash"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="3" style="text-align:center; padding:20px; color:var(--color-text-secondary);">
+                                        No extras found.
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-head">
+                        <div class="card-title"><i class="ti ti-star-plus" style="margin-right:6px; color:#854F0B;"></i> Add Extra</div>
+                    </div>
+                    <form action="{{ url_for('extras.add_extra') }}" method="POST">
+                        <div class="form-group">
+                            <label>Extra Name *</label>
+                            <input type="text" name="extra_name" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Price (PKR) *</label>
+                            <input type="number" name="price" step="0.01" required>
+                        </div>
+                        <div style="margin-top:16px;">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="ti ti-plus"></i> Add Extra
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- RATES SCREEN -->
+            {% if active == 'rates' %}
+            <div class="topbar">
+                <div>
+                    <div class="topbar-title">Rates Management</div>
+                    <div class="topbar-date">{{ current_date }}</div>
+                </div>
+                <div class="avatar">RAT</div>
+            </div>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label"><i class="ti ti-layers" aria-hidden="true" style="color:#185FA5;"></i> Rate types</div>
+                    <div class="stat-value">{{ stats.rate_types }}</div>
+                    <div class="stat-sub">Rack, Corporate, F&F, Group, Gov.</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label"><i class="ti ti-calendar-stats" aria-hidden="true" style="color:#3B6D11;"></i> Active seasons</div>
+                    <div class="stat-value">{{ stats.active_seasons }}</div>
+                    <div class="stat-sub">Distinct seasonal pricing periods</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label"><i class="ti ti-receipt" aria-hidden="true" style="color:#534AB7;"></i> Total records</div>
+                    <div class="stat-value">{{ stats.total_records }}</div>
+                    <div class="stat-sub">Across all room categories</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label"><i class="ti ti-tag" aria-hidden="true" style="color:#854F0B;"></i> Avg. Rack Rate</div>
+                    <div class="stat-value">PKR {{ "%.0f"|format(stats.avg_rack_rate) }}</div>
+                    <div class="stat-sub">Average Rack price per night</div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-head">
+                    <div class="card-title">Rate matrix — room type × occupancy × rate type</div>
+                    <form method="GET" action="{{ url_for('rates.rates_screen') }}" class="filters">
+                        <select name="season" onchange="this.form.submit()">
+                            {% for season in seasons %}
+                            <option value="{{ season.value }}" {% if season_filter == season.value %}selected{% endif %}>{{ season.label }} ({{ season.start_date.strftime('%Y') }})</option>
+                            {% endfor %}
+                        </select>
+                        <button type="button" class="btn btn-primary btn-sm" onclick="document.getElementById('new-rate-form').scrollIntoView({behavior: 'smooth'});">
+                            <i class="ti ti-plus"></i> Add rate
+                        </button>
+                    </form>
+                </div>
+                
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Room · Occupancy</th>
+                                {% for rtype in rate_types %}
+                                <th>{{ rtype.rate_name }}</th>
+                                {% endfor %}
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in matrix_rows %}
+                            <tr>
+                                <td style="font-weight:600; text-align:left;">{{ row.room_type.type_name }} · {{ row.occupancy_type.name }}</td>
+                                {% for item in row.row_rates %}
+                                <td>
+                                    {% if item.rate %}
+                                    <span style="font-weight:600;">PKR {{ "%.0f"|format(item.rate.amount) }}</span>
+                                    <div style="font-size:9px; color:var(--color-text-secondary);">
+                                        {{ item.rate.start_date.strftime('%d %b') }} - {{ item.rate.end_date.strftime('%d %b') }}
+                                    </div>
+                                    {% else %}
+                                    <span style="color:var(--color-text-tertiary);">-</span>
+                                    {% endif %}
+                                </td>
+                                {% endfor %}
+                                <td>
+                                    <div class="action-icons" style="justify-content:center;">
+                                        <button class="icon-btn" title="Edit" onclick="editRateRow('{{ row.room_type.room_type_id }}', '{{ row.occupancy_type.occupancy_type_id }}', '{{ filter_start }}', '{{ filter_end }}')">
+                                            <i class="ti ti-edit"></i>
+                                        </button>
+                                        <form method="POST" action="{{ url_for('rates.delete_row') }}" style="display:inline;" onsubmit="return confirm('Delete all rates for {{ row.room_type.type_name }} · {{ row.occupancy_type.name }} in this season?');">
+                                            <input type="hidden" name="room_type_id" value="{{ row.room_type.room_type_id }}">
+                                            <input type="hidden" name="occupancy_type_id" value="{{ row.occupancy_type.occupancy_type_id }}">
+                                            <input type="hidden" name="start_date" value="{{ filter_start }}">
+                                            <input type="hidden" name="end_date" value="{{ filter_end }}">
+                                            <button type="submit" class="icon-btn" style="color:#A32D2D;" title="Delete">
+                                                <i class="ti ti-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="{{ rate_types|length + 2 }}" style="text-align:center; padding:20px; color:var(--color-text-secondary);">
+                                    No rate records found for the selected season.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="two-col">
+                <div class="card" id="new-rate-form">
+                    <div class="card-head">
+                        <div class="card-title">
+                            <i class="ti ti-plus" style="color:#185FA5; margin-right:6px;"></i>
+                            Add / Edit Rate
+                        </div>
+                    </div>
+                    <form action="{{ url_for('rates.add_rate') }}" method="POST">
+                        <div class="form-section">Rate Details</div>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Rate Type *</label>
+                                <select name="rate_type_id" id="form_rate_type_id" required>
+                                    {% for rtype in rate_types %}
+                                    <option value="{{ rtype.rate_type_id }}">{{ rtype.rate_name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Room Type *</label>
+                                <select name="room_type_id" id="form_room_type_id" required>
+                                    {% for rt in room_types %}
+                                    <option value="{{ rt.room_type_id }}">{{ rt.type_name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Occupancy Type *</label>
+                                <select name="occupancy_type_id" id="form_occupancy_type_id" required>
+                                    {% for ot in occupancy_types %}
+                                    <option value="{{ ot.occupancy_type_id }}">{{ ot.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Amount per night (PKR) *</label>
+                                <input type="number" name="amount" id="form_amount" placeholder="e.g. 6000" step="0.01" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Season Start Date *</label>
+                                <input type="date" name="start_date" id="form_start_date" value="{{ filter_start }}" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Season End Date *</label>
+                                <input type="date" name="end_date" id="form_end_date" value="{{ filter_end }}" required>
+                            </div>
+                        </div>
+                        <div style="margin-top:16px;">
+                            <button type="submit" class="btn btn-primary" style="width:100%;">
+                                <i class="ti ti-device-floppy"></i> Save Rate
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                
+                <div class="card">
+                    <div class="card-head">
+                        <div class="card-title">
+                            <i class="ti ti-gift" style="color:#185FA5; margin-right:6px;"></i>
+                            Facilities per rate type
+                        </div>
+                    </div>
+                    <div style="font-size:11px; color:var(--color-text-secondary); margin-bottom:12px;">
+                        Select Rate Type:
+                        <select onchange="location.href='{{ url_for('rates.rates_screen') }}?facility_rate_type=' + this.value + '&season={{ season_filter }}'" style="font-size:12px; padding:4px 8px; border-radius:4px; margin-left:6px;">
+                            {% for rtype in rate_types %}
+                            <option value="{{ rtype.rate_type_id }}" {% if selected_rate_type.rate_type_id == rtype.rate_type_id %}selected{% endif %}>{{ rtype.rate_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <form action="{{ url_for('rates.save_facilities') }}" method="POST">
+                        <input type="hidden" name="rate_type_id" value="{{ selected_rate_type.rate_type_id }}">
+                        <input type="hidden" name="season_filter" value="{{ season_filter }}">
+                        
+                        <div style="display:flex; flex-direction:column; gap:8px;">
+                            {% for item in facilities %}
+                            <div style="display:flex; align-items:center; justify-content:space-between; padding:8px 0; border-bottom:0.5px solid var(--color-border-secondary);">
+                                <label style="flex:1; font-size:13px; color:var(--color-text-primary); display:flex; align-items:center; gap:8px; cursor:pointer;">
+                                    <input type="checkbox" name="facilities" value="{{ item.facility.facility_id }}" {% if item.enabled %}checked{% endif %}>
+                                    {{ item.facility.facility_name }}
+                                </label>
+                                <span style="font-size:11px; color:var(--color-text-secondary);">{{ item.facility.description or '' }}</span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        
+                        <div style="margin-top:16px;">
+                            <button type="submit" class="btn btn-primary" style="width:100%;">
+                                <i class="ti ti-check"></i> Save Facility Settings
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <script>
+                function editRateRow(roomTypeId, occupancyTypeId, startDate, endDate) {
+                    document.getElementById('form_room_type_id').value = roomTypeId;
+                    document.getElementById('form_occupancy_type_id').value = occupancyTypeId;
+                    document.getElementById('form_start_date').value = startDate;
+                    document.getElementById('form_end_date').value = endDate;
+                    
+                    const amountInput = document.getElementById('form_amount');
+                    amountInput.focus();
+                    document.getElementById('new-rate-form').scrollIntoView({behavior: 'smooth'});
+                }
+            </script>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>
