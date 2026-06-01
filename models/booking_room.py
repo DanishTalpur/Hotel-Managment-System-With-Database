@@ -12,6 +12,7 @@ class BookingRoom(db.Model):
     # Relationships
     extras = db.relationship('Extra', secondary='booking_room_extra', back_populates='booking_rooms')
     stays = db.relationship('Stay', backref='booking_room', lazy=True)
+    rate = db.relationship('Rate', backref='booking_rooms', lazy=True)
 
 
 class BookingRoomExtra(db.Model):

@@ -1,0 +1,222 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="topbar">
+    <div>
+        <div class="page-title">Rates Management</div>
+        <div class="page-sub">{{ current_date }}</div>
+    </div>
+    <div class="top-actions">
+        <button class="btn-primary" onclick="document.getElementById('new-rate-form').scrollIntoView({behavior: 'smooth'});">
+            <i class="ti ti-plus" aria-hidden="true"></i> Add Rate
+        </button>
+        <div class="avatar-top">RAT</div>
+    </div>
+</div>
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-label"><i class="ti ti-layers" aria-hidden="true" style="color:var(--color-accent-primary);"></i> Rate types</div>
+        <div class="stat-value">{{ stats.rate_types }}</div>
+        <div class="stat-sub">Rack, Corporate, F&F, Group, Gov.</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label"><i class="ti ti-calendar-stats" aria-hidden="true" style="color:#16a34a;"></i> Active seasons</div>
+        <div class="stat-value">{{ stats.active_seasons }}</div>
+        <div class="stat-sub">Seasonal pricing periods</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label"><i class="ti ti-receipt" aria-hidden="true" style="color:#6366f1;"></i> Total records</div>
+        <div class="stat-value">{{ stats.total_records }}</div>
+        <div class="stat-sub">Room pricing records</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label"><i class="ti ti-tag" aria-hidden="true" style="color:#b45309;"></i> Avg. Rack Rate</div>
+        <div class="stat-value">PKR {{ "%.0f"|format(stats.avg_rack_rate) }}</div>
+        <div class="stat-sub">Standard rate avg. per night</div>
+    </div>
+</div>
+
+<div class="card" style="margin-bottom: 24px;">
+    <div class="card-head">
+        <div class="card-title"><i class="ti ti-table" aria-hidden="true"></i> Rates Pricing Matrix</div>
+        <form method="GET" action="{{ url_for('rates.rates_screen') }}" class="filters">
+            <select name="season" onchange="this.form.submit()" style="width: 250px;">
+                {% for season in seasons %}
+                <option value="{{ season.value }}" {% if season_filter == season.value %}selected{% endif %}>{{ season.label }} ({{ season.start_date.strftime('%Y') }})</option>
+                {% endfor %}
+            </select>
+        </form>
+    </div>
+    
+    <div class="table-container">
+        <table class="tbl" style="text-align: center;">
+            <thead>
+                <tr>
+                    <th style="text-align: left;">Room Category & Occupancy</th>
+                    {% for rtype in rate_types %}
+                    <th>{{ rtype.rate_name }}</th>
+                    {% endfor %}
+                    <th style="text-align: center;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in matrix_rows %}
+                <tr>
+                    <td style="font-weight:700; font-family: var(--font-display); text-align: left; font-size: 13px;">
+                        {{ row.room_type.type_name }} &middot; {{ row.occupancy_type.name }}
+                    </td>
+                    {% for item in row.row_rates %}
+                    <td>
+                        {% if item.rate %}
+                        <div style="font-weight:700; color:var(--color-text-primary); font-family: monospace; font-size: 13px;">PKR {{ "%.0f"|format(item.rate.amount) }}</div>
+                        <div style="font-size:9px; color:var(--color-text-tertiary); font-weight: 500; margin-top:2px;">
+                            {{ item.rate.start_date.strftime('%d %b') }} - {{ item.rate.end_date.strftime('%d %b') }}
+                        </div>
+                        {% else %}
+                        <span style="color:var(--color-text-tertiary); font-weight:500;">&mdash;</span>
+                        {% endif %}
+                    </td>
+                    {% endfor %}
+                    <td>
+                        <div style="display:flex; justify-content:center; align-items:center; gap:4px;">
+                            <button class="icon-btn" title="Quick Edit" onclick="editRateRow('{{ row.room_type.room_type_id }}', '{{ row.occupancy_type.occupancy_type_id }}', '{{ filter_start }}', '{{ filter_end }}')">
+                                <i class="ti ti-edit" aria-hidden="true"></i>
+                            </button>
+                            <form method="POST" action="{{ url_for('rates.delete_row') }}" style="display:inline;" onsubmit="return confirm('Delete all rates for {{ row.room_type.type_name }} &middot; {{ row.occupancy_type.name }} in this season?');">
+                                <input type="hidden" name="room_type_id" value="{{ row.room_type.room_type_id }}">
+                                <input type="hidden" name="occupancy_type_id" value="{{ row.occupancy_type.occupancy_type_id }}">
+                                <input type="hidden" name="start_date" value="{{ filter_start }}">
+                                <input type="hidden" name="end_date" value="{{ filter_end }}">
+                                <button type="submit" class="icon-btn del" title="Delete Seasonal Plan">
+                                    <i class="ti ti-trash" aria-hidden="true"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="{{ rate_types|length + 2 }}" style="text-align:center; padding:30px; color:var(--color-text-secondary);">
+                        No rate records found for the selected season.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="two-col">
+    <!-- Add / Edit Rate Card -->
+    <div class="card" id="new-rate-form">
+        <div class="card-head">
+            <div class="card-title">
+                <i class="ti ti-plus" style="color:var(--color-accent-primary);"></i> Add / Edit Rate Matrix
+            </div>
+        </div>
+        <form action="{{ url_for('rates.add_rate') }}" method="POST">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Rate Type *</label>
+                    <select name="rate_type_id" id="form_rate_type_id" required>
+                        {% for rtype in rate_types %}
+                        <option value="{{ rtype.rate_type_id }}">{{ rtype.rate_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Room Category *</label>
+                    <select name="room_type_id" id="form_room_type_id" required>
+                        {% for rt in room_types %}
+                        <option value="{{ rt.room_type_id }}">{{ rt.type_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Occupancy Category *</label>
+                    <select name="occupancy_type_id" id="form_occupancy_type_id" required>
+                        {% for ot in occupancy_types %}
+                        <option value="{{ ot.occupancy_type_id }}">{{ ot.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Amount per Night (PKR) *</label>
+                    <input type="number" name="amount" id="form_amount" placeholder="e.g. 6000" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label>Season Start Date *</label>
+                    <input type="date" name="start_date" id="form_start_date" value="{{ filter_start }}" required>
+                </div>
+                <div class="form-group">
+                    <label>Season End Date *</label>
+                    <input type="date" name="end_date" id="form_end_date" value="{{ filter_end }}" required>
+                </div>
+            </div>
+            
+            <div style="margin-top:20px;">
+                <button type="submit" class="btn-primary" style="width:100%;">
+                    <i class="ti ti-device-floppy" aria-hidden="true"></i> Save Rate Setting
+                </button>
+            </div>
+        </form>
+    </div>
+    
+    <!-- Included Facilities per rate type Card -->
+    <div class="card">
+        <div class="card-head">
+            <div class="card-title">
+                <i class="ti ti-gift" style="color:var(--color-accent-primary);"></i> Rate Type Facilities Settings
+            </div>
+        </div>
+        
+        <div style="font-size:12px; color:var(--color-text-secondary); margin-bottom:16px; font-weight: 600;">
+            Select Rate Plan:
+            <select onchange="location.href='{{ url_for('rates.rates_screen') }}?facility_rate_type=' + this.value + '&season={{ season_filter }}'" style="font-size:12px; padding:4px 8px; border-radius:4px; margin-left:6px; outline:none; border:1px solid #cbd5e1; background:var(--color-background-secondary);">
+                {% for rtype in rate_types %}
+                <option value="{{ rtype.rate_type_id }}" {% if selected_rate_type.rate_type_id == rtype.rate_type_id %}selected{% endif %}>{{ rtype.rate_name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <form action="{{ url_for('rates.save_facilities') }}" method="POST">
+            <input type="hidden" name="rate_type_id" value="{{ selected_rate_type.rate_type_id }}">
+            <input type="hidden" name="season_filter" value="{{ season_filter }}">
+            
+            <div style="display:flex; flex-direction:column; gap:6px;">
+                {% for item in facilities %}
+                <div style="display:flex; align-items:center; justify-content:space-between; padding:10px 0; border-bottom:1px solid #f1f5f9;">
+                    <label style="flex:1; font-size:13px; font-weight: 500; color:var(--color-text-primary); display:flex; align-items:center; gap:8px; cursor:pointer;">
+                        <input type="checkbox" name="facilities" value="{{ item.facility.facility_id }}" {% if item.enabled %}checked{% endif %}>
+                        {{ item.facility.facility_name }}
+                    </label>
+                    <span style="font-size:11px; color:var(--color-text-secondary);">{{ item.facility.description or '' }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <div style="margin-top:20px;">
+                <button type="submit" class="btn-primary" style="width:100%;">
+                    <i class="ti ti-check" aria-hidden="true"></i> Save Included Facilities
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function editRateRow(roomTypeId, occupancyTypeId, startDate, endDate) {
+        document.getElementById('form_room_type_id').value = roomTypeId;
+        document.getElementById('form_occupancy_type_id').value = occupancyTypeId;
+        document.getElementById('form_start_date').value = startDate;
+        document.getElementById('form_end_date').value = endDate;
+        
+        const amountInput = document.getElementById('form_amount');
+        amountInput.focus();
+        document.getElementById('new-rate-form').scrollIntoView({behavior: 'smooth'});
+    }
+</script>
+{% endblock %}

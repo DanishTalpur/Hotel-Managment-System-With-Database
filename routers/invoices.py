@@ -56,8 +56,9 @@ def invoices_screen():
         })
     
     return render_template(
-        'index.html',
+        'invoices.html',
         active='invoices',
+        current_date=date.today().strftime('%A, %d %B %Y'),
         invoices=invoices_data,
         stats=stats,
         search=search,
@@ -93,8 +94,9 @@ def invoice_detail(id):
                 })
     
     return render_template(
-        'index.html',
+        'invoices.html',
         active='invoices',
+        current_date=date.today().strftime('%A, %d %B %Y'),
         invoice=invoice,
         booking=booking,
         customer=customer,

@@ -116,7 +116,7 @@ def rates_screen():
         })
 
     return render_template(
-        'index.html',
+        'rates.html',
         active='rates',
         current_date=datetime.now().strftime('%A, %d %B %Y'),
         seasons=seasons,

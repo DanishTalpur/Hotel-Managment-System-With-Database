@@ -1,0 +1,155 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="topbar">
+    <div>
+        <div class="page-title">Operations Services</div>
+        <div class="page-sub">{{ current_date }}</div>
+    </div>
+    <div class="top-actions">
+        <div class="avatar-top">SVC</div>
+    </div>
+</div>
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-label"><i class="ti ti-category" aria-hidden="true" style="color:var(--color-accent-primary);"></i> Categories</div>
+        <div class="stat-value">{{ categories|length }}</div>
+        <div class="stat-sub">Active departments</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label"><i class="ti ti-list" aria-hidden="true" style="color:#16a34a;"></i> Total items</div>
+        <div class="stat-value">9</div>
+        <div class="stat-sub">Available catalog services</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label"><i class="ti ti-star" aria-hidden="true" style="color:#6366f1;"></i> Logged stays</div>
+        <div class="stat-value">8</div>
+        <div class="stat-sub">Active guest staying</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label"><i class="ti ti-cash" aria-hidden="true" style="color:#b45309;"></i> Est. Revenue</div>
+        <div class="stat-value">PKR 12,400</div>
+        <div class="stat-sub">This month</div>
+    </div>
+</div>
+
+<div class="two-col">
+    <!-- Service Categories Card -->
+    <div class="card">
+        <div class="card-head">
+            <div class="card-title"><i class="ti ti-category-2" aria-hidden="true"></i> Service Departments</div>
+        </div>
+        
+        <style>
+            .cat-list { display: flex; flex-direction: column; gap: 10px; }
+            .cat-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: var(--color-background-secondary); border-radius: var(--border-radius-md); border: 1px solid #e2e8f0; transition: var(--transition-smooth); }
+            .cat-row:hover { border-color: var(--color-accent-primary); }
+        </style>
+        
+        <div class="cat-list">
+            {% for category in categories %}
+            <div class="cat-row">
+                <div>
+                    <div style="font-weight:700; font-size:13px; color:var(--color-text-primary);">{{ category.category_name }}</div>
+                    <div style="font-size:10px; color:var(--color-text-secondary);">Operations Department</div>
+                </div>
+                <div class="action-icons">
+                    <a href="{{ url_for('services.delete_category', id=category.category_id) }}" class="icon-btn del" onclick="return confirm('Delete this category?');">
+                        <i class="ti ti-trash" aria-hidden="true"></i>
+                    </a>
+                </div>
+            </div>
+            {% else %}
+            <div style="padding:20px; color:var(--color-text-secondary); text-align:center;">No departments found.</div>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <!-- Add Category Form Card -->
+    <div class="card">
+        <div class="card-head">
+            <div class="card-title"><i class="ti ti-folder-plus" style="color:var(--color-accent-primary);"></i> Add Department</div>
+        </div>
+        <form action="{{ url_for('services.add_category') }}" method="POST">
+            <div class="form-group">
+                <label>Department / Category Name *</label>
+                <input type="text" name="category_name" placeholder="e.g. Laundry or Hair Salon" required>
+            </div>
+            <div style="margin-top:16px;">
+                <button type="submit" class="btn-primary" style="width:100%;">
+                    <i class="ti ti-plus" aria-hidden="true"></i> Create Department
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Category Items Panels -->
+{% for cat_items in service_items %}
+<div class="card" style="margin-bottom: 20px;">
+    <div class="card-head">
+        <div class="card-title">
+            <i class="ti ti-list" style="color:var(--color-accent-primary);"></i> Service Catalog &mdash; {{ cat_items.category.category_name }}
+        </div>
+        <button class="btn-primary btn-sm" onclick="document.getElementById('item-form-{{ cat_items.category.category_id }}').style.display='block';">
+            <i class="ti ti-plus" aria-hidden="true"></i> Add Service Item
+        </button>
+    </div>
+    
+    <!-- Add Item form inside category card (toggled) -->
+    <div id="item-form-{{ cat_items.category.category_id }}" style="display:none; margin-bottom:16px; padding:16px; background:var(--color-background-secondary); border-radius:var(--border-radius-md); border:1px solid #cbd5e1;">
+        <form action="{{ url_for('services.add_service_item') }}" method="POST">
+            <input type="hidden" name="category_id" value="{{ cat_items.category.category_id }}">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Item Name *</label>
+                    <input type="text" name="item_name" placeholder="e.g. Sandwich or Shirt Press" required>
+                </div>
+                <div class="form-group">
+                    <label>Unit Price (PKR) *</label>
+                    <input type="number" name="unit_price" placeholder="e.g. 500.00" step="0.01" required>
+                </div>
+            </div>
+            <div style="margin-top:12px; display:flex; justify-content:flex-end; gap:8px;">
+                <button type="button" class="btn-outline btn-sm" onclick="document.getElementById('item-form-{{ cat_items.category.category_id }}').style.display='none';">Cancel</button>
+                <button type="submit" class="btn-primary btn-sm">Add Catalog Item</button>
+            </div>
+        </form>
+    </div>
+    
+    <div class="table-container">
+        <table class="tbl">
+            <thead>
+                <tr>
+                    <th>Item Name</th>
+                    <th>Category Department</th>
+                    <th>Unit Price</th>
+                    <th style="text-align: center;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in cat_items['items'] %}
+                <tr>
+                    <td style="font-weight:600;">{{ item.item_name }}</td>
+                    <td><span class="badge badge-reserved" style="font-size:10px;">{{ cat_items.category.category_name }}</span></td>
+                    <td style="font-weight:600; font-family: monospace;">PKR {{ "%.2f"|format(item.unit_price) }}</td>
+                    <td style="text-align: center;">
+                        <a href="{{ url_for('services.delete_service_item', id=item.service_item_id) }}" class="icon-btn del" onclick="return confirm('Delete this catalog item?');">
+                            <i class="ti ti-trash" aria-hidden="true"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="4" style="text-align:center; padding:16px; color:var(--color-text-secondary);">
+                        No items defined in this category catalog.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endfor %}
+{% endblock %}

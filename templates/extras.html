@@ -1,0 +1,208 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="topbar">
+    <div>
+        <div class="page-title">Extras & Add-ons</div>
+        <div class="page-sub">{{ current_date }}</div>
+    </div>
+    <div class="top-actions">
+        <button class="btn-primary" onclick="clearExtraForm()">
+            <i class="ti ti-plus" aria-hidden="true"></i> Add Extra
+        </button>
+        <div class="avatar-top">EXT</div>
+    </div>
+</div>
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-label">
+            <i class="ti ti-star" style="color:var(--color-accent-primary);"></i>
+            Total extras
+        </div>
+        <div class="stat-value">{{ stats.total_extras }}</div>
+        <div class="stat-sub">Available add-ons</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">
+            <i class="ti ti-shopping-cart" style="color:#16a34a;"></i>
+            Booked this month
+        </div>
+        <div class="stat-value">{{ stats.booked_count }}</div>
+        <div class="stat-sub">Across stay reservations</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">
+            <i class="ti ti-trending-up" style="color:#6366f1;"></i>
+            Most popular
+        </div>
+        <div class="stat-value" style="font-size: 15px; font-weight: 700; margin-top: 4px;">
+            {{ stats.popular_name }}
+        </div>
+        <div class="stat-sub">{{ stats.popular_count }} times this month</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">
+            <i class="ti ti-cash" style="color:#b45309;"></i>
+            Extras revenue
+        </div>
+        <div class="stat-value" style="font-size: 22px;">PKR {{ "%.0f"|format(stats.revenue) }}</div>
+        <div class="stat-sub">This month</div>
+    </div>
+</div>
+
+<div class="two-col">
+    <!-- Left Column: Extras Grid -->
+    <div class="stack">
+        <div class="card">
+            <div class="card-head">
+                <div class="card-title">
+                    <i class="ti ti-star"></i>
+                    All Available Extras
+                </div>
+            </div>
+            
+            <style>
+                .extras-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+                .extra-card { background: var(--color-background-secondary); border: 1px solid transparent; border-radius: var(--border-radius-md); padding: 14px; display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; transition: var(--transition-smooth); }
+                .extra-card:hover { border-color: var(--color-accent-primary); transform: translateY(-1px); background: var(--color-background-primary); box-shadow: var(--shadow-sm); }
+                .extra-title { font-size: 13px; font-weight: 700; color: var(--color-text-primary); margin-bottom: 2px; }
+                .extra-price { font-size: 12px; font-weight: 600; color: var(--color-accent-primary); font-family: monospace; }
+                .extra-desc { font-size: 11px; color: var(--color-text-secondary); margin-top: 6px; line-height: 1.4; }
+                .extra-actions { display: flex; gap: 2px; }
+            </style>
+            
+            <div class="extras-grid">
+                {% for extra in extras %}
+                <div class="extra-card">
+                    <div style="flex: 1;">
+                        <div class="extra-title">{{ extra.extra_name }}</div>
+                        <div class="extra-price">PKR {{ "%.2f"|format(extra.price) }} / unit</div>
+                        <div class="extra-desc">
+                            {{ extra.description or 'No custom description defined in database catalog.' }}
+                        </div>
+                    </div>
+                    <div class="extra-actions">
+                        <button class="icon-btn" title="Edit Catalog Extra" onclick="populateExtraForm('{{ extra.extra_id }}', '{{ extra.extra_name|escape }}', '{{ extra.price }}', '{{ extra.description|escape }}')">
+                            <i class="ti ti-edit" aria-hidden="true"></i>
+                        </button>
+                        <a href="{{ url_for('extras.delete_extra', id=extra.extra_id) }}" class="icon-btn del" title="Delete Extra" onclick="return confirm('Delete this extra from database catalog?');">
+                            <i class="ti ti-trash" aria-hidden="true"></i>
+                        </a>
+                    </div>
+                </div>
+                {% else %}
+                <div style="grid-column: span 2; padding: 30px; text-align: center; color: var(--color-text-secondary);">
+                    No extras items defined in catalog database.
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Right Column: Add/Edit & Usage statistics -->
+    <div class="stack">
+        <!-- Add / Edit Extra form -->
+        <div class="card">
+            <div class="card-head">
+                <div class="card-title" id="form-card-title">
+                    <i class="ti ti-star-plus" style="color:var(--color-accent-primary);"></i> Add / Edit Extra
+                </div>
+            </div>
+            
+            <form id="extra-editor-form" action="{{ url_for('extras.add_extra') }}" method="POST">
+                <input type="hidden" id="edit_extra_id" name="extra_id" value="">
+                
+                <div class="form-section">Catalog Item Details</div>
+                
+                <div class="form-group">
+                    <label>Extra Item Name *</label>
+                    <input type="text" id="form_extra_name" name="extra_name" placeholder="e.g. Internet Access or Extra Bed" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Price Per Unit (PKR) *</label>
+                    <input type="number" id="form_price" name="price" placeholder="e.g. 1500.00" min="0" step="0.01" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Item Description (optional)</label>
+                    <textarea id="form_description" name="description" placeholder="Brief description of the add-on package..."></textarea>
+                </div>
+                
+                <div style="display:flex; gap:8px; margin-top:8px;">
+                    <button type="submit" class="btn-primary" style="flex:1;">
+                        <i class="ti ti-check" aria-hidden="true"></i> Save Extra
+                    </button>
+                    <button type="button" class="btn-outline" style="flex:1;" onclick="clearExtraForm()">
+                        Clear Form
+                    </button>
+                </div>
+            </form>
+        </div>
+        
+        <!-- Usage this month progress bars -->
+        <div class="card">
+            <div class="card-head">
+                <div class="card-title">
+                    <i class="ti ti-chart-bar" style="color:var(--color-accent-primary);"></i> Monthly Usage Stats
+                </div>
+            </div>
+            
+            <style>
+                .usage-list { display: flex; flex-direction: column; gap: 12px; }
+                .usage-row { display: flex; align-items: center; gap: 10px; }
+                .usage-label { flex: 1; font-size: 12px; font-weight: 600; color: var(--color-text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+                .bar-track { width: 110px; height: 8px; border-radius: 999px; background: var(--color-background-secondary); overflow: hidden; border: 1px solid #e2e8f0; }
+                .bar-fill { height: 100%; border-radius: 999px; background: #378ADD; transition: width 0.3s ease; }
+                .usage-count { width: 32px; text-align: right; font-size: 11px; color: var(--color-text-secondary); font-weight: 600; }
+            </style>
+            
+            <div class="usage-list">
+                {% for row in usage_list %}
+                <div class="usage-row">
+                    <span class="usage-label">{{ row.extra_name }}</span>
+                    <div class="bar-track">
+                        <div class="bar-fill" style="width: {{ row.pct }}%;"></div>
+                    </div>
+                    <span class="usage-count">{{ row.count }}</span>
+                </div>
+                {% else %}
+                <div style="font-size:12px; color:var(--color-text-secondary); padding: 10px 0; text-align: center;">
+                    No bookings stay recorded with extras this month.
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function populateExtraForm(id, name, price, description) {
+        document.getElementById('form-card-title').innerHTML = '<i class="ti ti-edit" style="color:var(--color-accent-primary);"></i> Edit Extra — #' + id;
+        document.getElementById('edit_extra_id').value = id;
+        document.getElementById('form_extra_name').value = name;
+        document.getElementById('form_price').value = price;
+        document.getElementById('form_description').value = description;
+        
+        // Update form action target
+        document.getElementById('extra-editor-form').action = '/extras/edit/' + id;
+        
+        // Focus the name input
+        document.getElementById('form_extra_name').focus();
+        document.getElementById('extra-editor-form').scrollIntoView({behavior: 'smooth'});
+    }
+    
+    function clearExtraForm() {
+        document.getElementById('form-card-title').innerHTML = '<i class="ti ti-star-plus" style="color:var(--color-accent-primary);"></i> Add / Edit Extra';
+        document.getElementById('edit_extra_id').value = '';
+        document.getElementById('form_extra_name').value = '';
+        document.getElementById('form_price').value = '';
+        document.getElementById('form_description').value = '';
+        
+        document.getElementById('extra-editor-form').action = '{{ url_for("extras.add_extra") }}';
+    }
+</script>
+{% endblock %}

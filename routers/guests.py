@@ -37,8 +37,9 @@ def guests_screen():
         })
     
     return render_template(
-        'index.html',
+        'guests.html',
         active='guests',
+        current_date=date.today().strftime('%A, %d %B %Y'),
         guests=guests_data,
         search=search
     )
@@ -83,8 +84,9 @@ def guest_detail(id):
     bookings = Booking.query.filter_by(customer_id=id).all()
     
     return render_template(
-        'index.html',
+        'guests.html',
         active='guests',
+        current_date=date.today().strftime('%A, %d %B %Y'),
         guest=guest,
         bookings=bookings,
         view_detail=True

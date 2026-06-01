@@ -1,0 +1,207 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="topbar">
+    <div>
+        <div class="page-title">Invoices & Financials</div>
+        <div class="page-sub">{{ current_date }}</div>
+    </div>
+    <div class="top-actions">
+        <div class="avatar-top">FIN</div>
+    </div>
+</div>
+
+{% if view_detail %}
+<!-- INVOICE DETAILS VIEW -->
+<div class="card" style="margin-bottom: 24px;">
+    <div class="card-head">
+        <div class="card-title">
+            <i class="ti ti-receipt" style="color:var(--color-accent-primary);"></i> Invoice Details — #INV-{{ invoice.invoice_id }}
+        </div>
+        <div style="display: flex; gap: 8px; align-items: center;">
+            <span class="badge badge-{{ invoice.payment_status|lower }}">{{ invoice.payment_status }}</span>
+            <a href="{{ url_for('invoices.invoices_screen') }}" class="btn-outline btn-sm">
+                <i class="ti ti-chevron-left" aria-hidden="true"></i> Back to Directory
+            </a>
+        </div>
+    </div>
+    
+    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:20px; padding-bottom:18px; border-bottom:1px solid #f1f5f9; flex-wrap:wrap; gap:16px;">
+        <div>
+            <div style="font-weight:700; font-size:16px; color:var(--color-text-primary); margin-bottom: 4px;">{{ customer.first_name }} {{ customer.last_name }}</div>
+            <div style="font-size:12px; color:var(--color-text-secondary);">Booking Identifier: #BK-{{ booking.booking_id }}</div>
+            <div style="font-size:12px; color:var(--color-text-secondary);">Stay Period: {{ booking.planned_checkin.strftime('%d %b %Y') }} &mdash; {{ booking.planned_checkout.strftime('%d %b %Y') }}</div>
+        </div>
+        <div style="text-align:right;">
+            <div style="font-size:11px; font-weight:600; color:var(--color-text-secondary); text-transform:uppercase; letter-spacing:0.05em;">Issue Date</div>
+            <div style="font-size:14px; font-weight:600; color:var(--color-text-primary); margin-top:2px;">{{ invoice.issued_date.strftime('%d %b %Y') }}</div>
+        </div>
+    </div>
+    
+    <style>
+        .invoice-item-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #f8fafc; font-size: 13px; }
+        .invoice-item-row:last-child { border-bottom: none; }
+        .receipt-section-header { font-size: 11px; font-weight: 700; color: var(--color-text-secondary); margin: 16px 0 8px; text-transform: uppercase; letter-spacing: 0.08em; }
+    </style>
+    
+    <!-- STAY CHARGES -->
+    <div class="receipt-section-header">Room Stay Charges</div>
+    {% for charge in stay_charges %}
+    <div class="invoice-item-row">
+        <span style="color:var(--color-text-secondary);">Room {{ charge.room_number }} &middot; Night stay ({{ charge.date.strftime('%d %b %Y') }})</span>
+        <span style="font-weight:600; font-family: monospace;">PKR {{ "%.0f"|format(charge.charge) }}</span>
+    </div>
+    {% else %}
+    <div style="font-size:12px; color:var(--color-text-tertiary); padding: 6px 0;">No room charge records registered.</div>
+    {% endfor %}
+    
+    <!-- ADD-ON SERVICES -->
+    <div class="receipt-section-header">Service Charges & Amenities</div>
+    <div class="invoice-item-row" style="border-bottom:none;">
+        <span style="color:var(--color-text-secondary); font-style: italic;">No additional service orders recorded on booking stay.</span>
+        <span style="font-weight:600; font-family: monospace;">PKR 0</span>
+    </div>
+    
+    <!-- EXTRAS -->
+    <div class="receipt-section-header">Hotel Add-on Extras</div>
+    <div class="invoice-item-row" style="border-bottom:none;">
+        <span style="color:var(--color-text-secondary); font-style: italic;">No custom extras requested.</span>
+        <span style="font-weight:600; font-family: monospace;">PKR 0</span>
+    </div>
+    
+    <div style="border-top: 1px solid #e2e8f0; margin-top: 20px; padding-top: 16px; display:flex; flex-direction:column; gap:8px;">
+        <div class="invoice-item-row">
+            <span style="color:var(--color-text-secondary);">Subtotal Amount</span>
+            <span style="font-weight:600; font-family: monospace;">PKR {{ "%.0f"|format(invoice.subtotal) }}</span>
+        </div>
+        <div class="invoice-item-row">
+            <span style="color:var(--color-text-secondary);">GST Sales Tax (16%)</span>
+            <span style="font-weight:600; font-family: monospace;">PKR {{ "%.0f"|format(invoice.tax_amount) }}</span>
+        </div>
+        <div class="invoice-item-row" style="padding-top: 10px; border-top:1px solid #f1f5f9;">
+            <span style="font-size: 15px; font-weight: 700; color: var(--color-text-primary);">Grand Total</span>
+            <span style="font-size: 16px; font-weight: 700; color: var(--color-accent-primary); font-family: monospace;">PKR {{ "%.0f"|format(invoice.total_amount) }}</span>
+        </div>
+        <div class="invoice-item-row">
+            <span style="color:var(--color-text-secondary);">Paid Amount</span>
+            <span style="font-weight:600; color:#15803d; font-family: monospace;">PKR {{ "%.0f"|format(invoice.paid_amount) }}</span>
+        </div>
+        <div class="invoice-item-row">
+            <span style="color:var(--color-text-secondary);">Balance Due</span>
+            <span style="font-weight:700; color:{% if invoice.total_amount - invoice.paid_amount > 0 %}#dc2626{% else %}#15803d{% endif %}; font-family: monospace;">
+                PKR {{ "%.0f"|format(invoice.total_amount - invoice.paid_amount) }}
+            </span>
+        </div>
+    </div>
+    
+    <div style="display:flex; gap:10px; margin-top:20px; border-top: 1px solid #e2e8f0; padding-top:16px;">
+        <button class="btn-outline" style="flex:1;" onclick="window.print();">
+            <i class="ti ti-printer" aria-hidden="true"></i> Print Receipt
+        </button>
+        {% if invoice.payment_status == 'unpaid' %}
+        <a href="{{ url_for('invoices.mark_paid', id=invoice.invoice_id) }}" class="btn-success" style="flex:1;">
+            <i class="ti ti-check" aria-hidden="true"></i> Record Full Payment
+        </a>
+        {% endif %}
+    </div>
+</div>
+{% else %}
+<!-- DIRECTORY VIEW -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-label"><i class="ti ti-cash" style="color:#16a34a;"></i> Total Revenue</div>
+        <div class="stat-value">PKR {{ "%.0f"|format(stats.total_revenue) }}</div>
+        <div class="stat-sub up">Total collected</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label"><i class="ti ti-clock" style="color:#b45309;"></i> Pending Revenue</div>
+        <div class="stat-value">PKR {{ "%.0f"|format(stats.pending_revenue) }}</div>
+        <div class="stat-sub down">Awaiting settlement</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label"><i class="ti ti-receipt" style="color:var(--color-accent-primary);"></i> Paid Invoices</div>
+        <div class="stat-value">{{ stats.paid_invoices }}</div>
+        <div class="stat-sub">Completed transactions</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label"><i class="ti ti-alert-circle" style="color:#dc2626;"></i> Unpaid Invoices</div>
+        <div class="stat-value">{{ stats.unpaid_invoices }}</div>
+        <div class="stat-sub">Pending payments</div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-head">
+        <div class="card-title"><i class="ti ti-receipt" aria-hidden="true"></i> Financial Invoices</div>
+        <form method="GET" action="{{ url_for('invoices.invoices_screen') }}" class="filters">
+            <input type="text" name="search" placeholder="Search invoice / guest..." value="{{ search }}" style="width:240px;">
+            <select name="status" onchange="this.form.submit()" style="width:140px;">
+                <option value="">All statuses</option>
+                <option value="paid" {% if status_filter == 'paid' %}selected{% endif %}>Paid</option>
+                <option value="unpaid" {% if status_filter == 'unpaid' %}selected{% endif %}>Unpaid</option>
+            </select>
+            <button type="submit" class="btn-outline btn-sm"><i class="ti ti-search" aria-hidden="true"></i> Search</button>
+        </form>
+    </div>
+    
+    <div class="table-container">
+        <table class="tbl">
+            <thead>
+                <tr>
+                    <th>Invoice ID</th>
+                    <th>Guest details</th>
+                    <th>Booking #</th>
+                    <th>Issue Date</th>
+                    <th>Subtotal</th>
+                    <th>Tax (16%)</th>
+                    <th>Total Amount</th>
+                    <th>Paid Amount</th>
+                    <th>Payment Status</th>
+                    <th style="text-align: center;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for invoice_data in invoices %}
+                <tr>
+                    <td style="color:var(--color-accent-primary); font-weight:600; font-family: var(--font-display);">#INV-{{ invoice_data.invoice.invoice_id }}</td>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <div class="avatar-top" style="width: 28px; height: 28px; font-size: 10px; background:#e0f2fe; color:#0369a1;">
+                                {{ invoice_data.customer.first_name[0] }}{{ invoice_data.customer.last_name[0] }}
+                            </div>
+                            <span style="font-weight: 600;">{{ invoice_data.customer.first_name }} {{ invoice_data.customer.last_name }}</span>
+                        </div>
+                    </td>
+                    <td style="color: var(--color-text-secondary);">#BK-{{ invoice_data.booking.booking_id }}</td>
+                    <td>{{ invoice_data.invoice.issued_date.strftime('%d %b %Y') }}</td>
+                    <td style="font-family: monospace;">PKR {{ "%.0f"|format(invoice_data.invoice.subtotal) }}</td>
+                    <td style="font-family: monospace;">PKR {{ "%.0f"|format(invoice_data.invoice.tax_amount) }}</td>
+                    <td style="font-weight:700; font-family: monospace; color: var(--color-text-primary);">PKR {{ "%.0f"|format(invoice_data.invoice.total_amount) }}</td>
+                    <td style="font-weight:600; font-family: monospace; color: #15803d;">PKR {{ "%.0f"|format(invoice_data.invoice.paid_amount) }}</td>
+                    <td><span class="badge badge-{{ invoice_data.invoice.payment_status|lower }}">{{ invoice_data.invoice.payment_status }}</span></td>
+                    <td style="text-align: center;">
+                        <div style="display: flex; gap: 4px; justify-content: center; align-items: center;">
+                            <a href="{{ url_for('invoices.invoice_detail', id=invoice_data.invoice.invoice_id) }}" class="icon-btn" title="View Detailed Invoice">
+                                <i class="ti ti-eye" aria-hidden="true"></i>
+                            </a>
+                            {% if invoice_data.invoice.payment_status == 'unpaid' %}
+                            <a href="{{ url_for('invoices.mark_paid', id=invoice_data.invoice.invoice_id) }}" class="icon-btn" style="color:#16a34a;" title="Mark Paid">
+                                <i class="ti ti-check" aria-hidden="true"></i>
+                            </a>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="10" style="text-align:center; padding:30px; color:var(--color-text-secondary);">
+                        No invoices generated or found matching search parameters.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

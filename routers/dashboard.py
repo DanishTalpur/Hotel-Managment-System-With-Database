@@ -93,7 +93,7 @@ def dashboard():
     }
     
     return render_template(
-        'index.html',
+        'dashboard.html',
         active='dashboard',
         current_date=datetime.now().strftime('%A, %d %B %Y'),
         stats=stats,

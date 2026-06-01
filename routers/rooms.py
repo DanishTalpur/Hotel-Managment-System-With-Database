@@ -47,9 +47,12 @@ def rooms_screen():
     # Get all attributes
     attributes = RoomAttribute.query.all()
     
+    from datetime import datetime
+    
     return render_template(
-        'index.html',
+        'rooms.html',
         active='rooms',
+        current_date=datetime.now().strftime('%A, %d %B %Y'),
         rooms=rooms,
         stats=stats,
         room_types=room_types,

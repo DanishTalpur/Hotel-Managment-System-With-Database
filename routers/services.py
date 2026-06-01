@@ -17,9 +17,12 @@ def services_screen():
             'items': items
         })
     
+    from datetime import datetime
+    
     return render_template(
-        'index.html',
+        'services.html',
         active='services',
+        current_date=datetime.now().strftime('%A, %d %B %Y'),
         categories=categories,
         service_items=service_items
     )

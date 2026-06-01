@@ -1,15 +1,214 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Dashboard</title>
-</head>
-<body>
+{% extends 'base.html' %}
 
-<h1>Dashboard Working</h1>
+{% block content %}
+<div class="topbar">
+    <div>
+        <div class="page-title">Dashboard</div>
+        <div class="page-sub">{{ current_date }}</div>
+    </div>
+    <div class="top-actions">
+        <div class="notification">
+            <i class="ti ti-bell" aria-hidden="true"></i>
+            <span class="notification-count">3</span>
+        </div>
+        <div class="avatar-top">AM</div>
+    </div>
+</div>
 
-{% for invoice in invoices %}
-    <p>{{ invoice.invoice_id }} - {{ invoice.total_amount }}</p>
-{% endfor %}
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-label"><i class="ti ti-door-enter" aria-hidden="true" style="color:var(--color-accent-primary);"></i> Occupied rooms</div>
+        <div class="stat-value">{{ stats.occupied }}</div>
+        <div class="stat-sub up">Live from Database</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label"><i class="ti ti-door" aria-hidden="true" style="color:#16a34a;"></i> Vacant rooms</div>
+        <div class="stat-value">{{ stats.vacant }}</div>
+        <div class="stat-sub" style="color:var(--color-text-secondary);">Available Inventory</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label"><i class="ti ti-logout" aria-hidden="true" style="color:#b45309;"></i> Checkouts today</div>
+        <div class="stat-value">{{ stats.checkouts_today }}</div>
+        <div class="stat-sub" style="color:var(--color-text-secondary);">Scheduled departures</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label"><i class="ti ti-login" aria-hidden="true" style="color:#16a34a;"></i> Check-ins today</div>
+        <div class="stat-value">{{ stats.checkins_today }}</div>
+        <div class="stat-sub" style="color:var(--color-text-secondary);">Expected arrivals</div>
+    </div>
+</div>
 
-</body>
-</html>
+<!-- Quick actions grid -->
+<div class="card" style="margin-bottom: 24px;">
+    <div class="card-head" style="margin-bottom: 0;">
+        <div class="card-title"><i class="ti ti-bolt" aria-hidden="true"></i> Quick Operations</div>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 14px;">
+        <a href="{{ url_for('reservations.reservations_screen') }}" class="btn-outline" style="justify-content: center; height: 44px; font-weight: 500; font-size: 13px; color: var(--color-accent-primary); border-color: rgba(37,99,235,0.2); background: var(--color-accent-light);">
+            <i class="ti ti-calendar-plus" aria-hidden="true" style="font-size: 18px;"></i> New Reservation
+        </a>
+        <a href="{{ url_for('reservations.reservations_screen') }}" class="btn-outline" style="justify-content: center; height: 44px; font-weight: 500; font-size: 13px; color: #16a34a; border-color: rgba(22,163,74,0.2); background: #f0fdf4;">
+            <i class="ti ti-login" aria-hidden="true" style="font-size: 18px;"></i> Guest Check-In
+        </a>
+        <a href="{{ url_for('reservations.reservations_screen') }}" class="btn-outline" style="justify-content: center; height: 44px; font-weight: 500; font-size: 13px; color: #b45309; border-color: rgba(180,83,9,0.2); background: #fef3c7;">
+            <i class="ti ti-logout" aria-hidden="true" style="font-size: 18px;"></i> Guest Check-Out
+        </a>
+        <a href="{{ url_for('rooms.rooms_screen') }}" class="btn-outline" style="justify-content: center; height: 44px; font-weight: 500; font-size: 13px; color: #6366f1; border-color: rgba(99,102,241,0.2); background: #eef2ff;">
+            <i class="ti ti-building" aria-hidden="true" style="font-size: 18px;"></i> Manage Rooms
+        </a>
+    </div>
+</div>
+
+<div class="two-col">
+    <!-- Room Map Overview -->
+    <div class="card">
+        <div class="card-head">
+            <div class="card-title"><i class="ti ti-map" aria-hidden="true"></i> Floor Map Overview</div>
+            <a href="{{ url_for('rooms.rooms_screen') }}" class="card-action">All Floors &rarr;</a>
+        </div>
+        
+        <style>
+            .room-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; }
+            .room-cell { border-radius: var(--border-radius-md); padding: 12px 6px; text-align: center; cursor: pointer; transition: var(--transition-smooth); border: 1px solid transparent; box-shadow: var(--shadow-sm); }
+            .room-cell:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+            .room-cell .rnum { font-size: 14px; font-weight: 700; margin-bottom: 2px; font-family: var(--font-display); }
+            .room-cell .rtype { font-size: 10px; font-weight: 500; text-transform: capitalize; }
+            
+            .r-occupied { background: #eff6ff; color: #1d4ed8; border-color: #bfdbfe; }
+            .r-available, .r-vacant { background: #f0fdf4; color: #15803d; border-color: #bbf7d0; }
+            .r-maintenance { background: #fef3c7; color: #b45309; border-color: #fde68a; }
+            .r-checkout { background: #fff5f5; color: #e11d48; border-color: #fecdd3; }
+            
+            .legend { display: flex; gap: 16px; margin-top: 20px; flex-wrap: wrap; padding-top: 16px; border-top: 1px solid #f1f5f9; }
+            .legend-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--color-text-secondary); font-weight: 600; text-transform: uppercase; }
+            .legend-dot { width: 10px; height: 10px; border-radius: 3px; }
+        </style>
+        
+        <div class="room-grid">
+            {% for room in room_map %}
+            <div class="room-cell r-{{ room.status|lower }}">
+                <div class="rnum">{{ room.room_number }}</div>
+                <div class="rtype">{{ room.type_name }}</div>
+            </div>
+            {% else %}
+            <div style="font-size: 13px; color: var(--color-text-secondary); padding: 20px; grid-column: span 6; text-align: center;">
+                No rooms initialized in the database.
+            </div>
+            {% endfor %}
+        </div>
+        
+        <div class="legend">
+            <div class="legend-item"><div class="legend-dot" style="background:#eff6ff; border:1px solid #bfdbfe;"></div> Occupied</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#f0fdf4; border:1px solid #bbf7d0;"></div> Vacant</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#fef3c7; border:1px solid #fde68a;"></div> Maintenance</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#fff5f5; border:1px solid #fecdd3;"></div> Checkout</div>
+        </div>
+    </div>
+    
+    <!-- Today's Activity Log -->
+    <div class="card">
+        <div class="card-head">
+            <div class="card-title"><i class="ti ti-activity" aria-hidden="true"></i> Today's Activities</div>
+            <a href="{{ url_for('reservations.reservations_screen') }}" class="card-action">View All Log &rarr;</a>
+        </div>
+        
+        <style>
+            .mini-list { display: flex; flex-direction: column; gap: 12px; }
+            .mini-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #f1f5f9; }
+            .mini-row:last-child { border-bottom: none; }
+            .mini-guest { display: flex; align-items: center; gap: 12px; }
+            .mini-av { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+        </style>
+        
+        <div class="mini-list">
+            {% for activity in today_activities %}
+            <div class="mini-row">
+                <div class="mini-guest">
+                    <div class="mini-av" style="background:#e0f2fe; color:#0369a1;">
+                        {{ activity.first_name[0] }}{{ activity.last_name[0] }}
+                    </div>
+                    <div>
+                        <div style="font-weight:600; font-size:13px; color:var(--color-text-primary);">{{ activity.first_name }} {{ activity.last_name }}</div>
+                        <div style="font-size:11px; color:var(--color-text-secondary);">Room {{ activity.room_number }} · {{ activity.type_name }}</div>
+                    </div>
+                </div>
+                <span class="badge badge-booked">{{ activity.booking_status }}</span>
+            </div>
+            {% else %}
+            <div style="font-size: 13px; color: var(--color-text-secondary); padding: 30px; text-align: center; width: 100%;">
+                No activities logged for today.
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Upcoming Bookings Table -->
+<div class="card" style="margin-bottom: 24px;">
+    <div class="card-head">
+        <div class="card-title"><i class="ti ti-calendar-time" aria-hidden="true"></i> Upcoming Bookings</div>
+        <a href="{{ url_for('reservations.reservations_screen') }}" class="card-action">Manage All Bookings &rarr;</a>
+    </div>
+    
+    <div class="table-container">
+        <table class="tbl">
+            <thead>
+                <tr>
+                    <th>Guest Name</th>
+                    <th>Assigned Room</th>
+                    <th>Check-in Date</th>
+                    <th>Check-out Date</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for booking in upcoming_bookings %}
+                <tr>
+                    <td style="font-weight: 600;">{{ booking.first_name }} {{ booking.last_name }}</td>
+                    <td>Room {{ booking.room_number }}</td>
+                    <td>{{ booking.planned_checkin }}</td>
+                    <td>{{ booking.planned_checkout }}</td>
+                    <td><span class="badge badge-{{ booking.status|lower }}">{{ booking.status }}</span></td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="5" style="text-align: center; color: var(--color-text-secondary); padding: 30px;">
+                        No upcoming bookings found.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Occupancy breakdown chart -->
+<div class="card">
+    <div class="card-head" style="margin-bottom: 12px;">
+        <div class="card-title"><i class="ti ti-chart-donut" aria-hidden="true"></i> Room Occupancy Breakdown</div>
+    </div>
+    
+    <style>
+        .donut-wrap { display: flex; align-items: center; gap: 32px; padding: 10px 0; }
+        .donut-legend { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; flex: 1; }
+        .donut-leg-item { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 500; }
+        .donut-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+    </style>
+    
+    <div class="donut-wrap">
+        <svg width="110" height="110" viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="38" fill="none" stroke="#f1f5f9" stroke-width="13"/>
+            <circle cx="50" cy="50" r="38" fill="none" stroke="var(--color-accent-primary)" stroke-width="13" 
+                    stroke-dasharray="{{ stats.occupancy_rate }} {{ 239 - stats.occupancy_rate }}" stroke-dashoffset="0" transform="rotate(-90 50 50)" style="transition: stroke-dasharray 0.5s ease;"/>
+            <text x="50" y="46" text-anchor="middle" font-family="var(--font-display)" font-size="18" font-weight="700" fill="var(--color-text-primary)">{{ stats.occupancy_rate }}%</text>
+            <text x="50" y="58" text-anchor="middle" font-size="9" font-weight="600" fill="var(--color-text-secondary)" style="text-transform: uppercase; letter-spacing: 0.05em;">occupied</text>
+        </svg>
+        <div class="donut-legend">
+            <div class="donut-leg-item"><div class="donut-dot" style="background:var(--color-accent-primary);"></div><span style="color:var(--color-text-primary);">Occupied — {{ stats.occupied }} rooms</span></div>
+            <div class="donut-leg-item"><div class="donut-dot" style="background:#16a34a;"></div><span style="color:var(--color-text-primary);">Vacant — {{ stats.vacant }} rooms</span></div>
+            <div class="donut-leg-item"><div class="donut-dot" style="background:#ef4444;"></div><span style="color:var(--color-text-primary);">Departures Due — {{ stats.checkouts_today }} rooms</span></div>
+            <div class="donut-leg-item"><div class="donut-dot" style="background:#b45309;"></div><span style="color:var(--color-text-primary);">Maintenance — {{ stats.maintenance }} rooms</span></div>
+        </div>
+    </div>
+</div>
+{% endblock %}

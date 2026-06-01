@@ -1,85 +1,200 @@
-<h1>Guests</h1>
+{% extends 'base.html' %}
 
-<form action="/add_guest" method="POST">
+{% block content %}
+<div class="topbar">
+    <div>
+        <div class="page-title">Guests Directory</div>
+        <div class="page-sub">{{ current_date }}</div>
+    </div>
+    <div class="top-actions">
+        <div class="avatar-top">GM</div>
+    </div>
+</div>
 
-    <input
-        type="text"
-        name="first_name"
-        placeholder="First Name"
-        required
-    >
+{% if view_detail %}
+<!-- GUEST DETAIL SCREEN -->
+<div class="card" style="margin-bottom: 24px;">
+    <div class="card-head">
+        <div class="card-title">
+            <i class="ti ti-user" style="color:var(--color-accent-primary);"></i> Guest Profile details
+        </div>
+        <a href="{{ url_for('guests.guests_screen') }}" class="btn-outline btn-sm">
+            <i class="ti ti-chevron-left" aria-hidden="true"></i> Back to Directory
+        </a>
+    </div>
+    
+    <div style="display: flex; gap: 24px; align-items: flex-start; padding-bottom: 20px; border-bottom: 1px solid #f1f5f9; margin-bottom: 20px; flex-wrap: wrap;">
+        <div class="avatar-top" style="width: 72px; height: 72px; font-size: 24px; font-family: var(--font-display);">
+            {{ guest.first_name[0] }}{{ guest.last_name[0] }}
+        </div>
+        <div style="flex: 1; min-width: 250px;">
+            <h2 style="font-family: var(--font-display); font-size: 22px; font-weight: 700; color: var(--color-text-primary); margin-bottom: 4px;">
+                {{ guest.first_name }} {{ guest.last_name }}
+            </h2>
+            <p style="font-size: 13px; color: var(--color-text-secondary); display: flex; align-items: center; gap: 6px; margin-bottom: 12px;">
+                <i class="ti ti-mail" aria-hidden="true"></i> {{ guest.email }} &middot; <i class="ti ti-phone" aria-hidden="true"></i> {{ guest.phone or 'No phone number' }}
+            </p>
+            <div style="display: flex; gap: 8px;">
+                <span class="badge badge-reserved" style="font-size: 11px;">Document Type: {{ guest.id_type or 'N/A' }}</span>
+                <span class="badge badge-pending" style="font-size: 11px; background:#f1f5f9; color:var(--color-text-secondary);">Doc Number: {{ guest.id_number or 'N/A' }}</span>
+            </div>
+        </div>
+        <div style="background: var(--color-background-secondary); border-radius: var(--border-radius-lg); padding: 16px; min-width: 180px; text-align: center; border: 1px solid #e2e8f0;">
+            <div style="font-size: 11px; font-weight: 600; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px;">Total Stays</div>
+            <div style="font-family: var(--font-display); font-size: 32px; font-weight: 700; color: var(--color-accent-primary);">{{ bookings|length }}</div>
+            <div style="font-size: 11px; color: var(--color-text-tertiary); margin-top: 4px;">Since registration</div>
+        </div>
+    </div>
+    
+    <div class="card-title" style="margin-bottom: 14px;"><i class="ti ti-history" style="color:var(--color-accent-primary);"></i> Stay History</div>
+    <div class="table-container">
+        <table class="tbl">
+            <thead>
+                <tr>
+                    <th>Booking ID</th>
+                    <th>Planned Check-in</th>
+                    <th>Planned Check-out</th>
+                    <th>Actual Check-in</th>
+                    <th>Actual Check-out</th>
+                    <th>Source</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for booking in bookings %}
+                <tr>
+                    <td style="color:var(--color-accent-primary); font-weight:600; font-family: var(--font-display);">#BK-{{ booking.booking_id }}</td>
+                    <td>{{ booking.planned_checkin.strftime('%d %b %Y') }}</td>
+                    <td>{{ booking.planned_checkout.strftime('%d %b %Y') }}</td>
+                    <td>{{ booking.actual_checkin.strftime('%d %b %Y') if booking.actual_checkin else '-' }}</td>
+                    <td>{{ booking.actual_checkout.strftime('%d %b %Y') if booking.actual_checkout else '-' }}</td>
+                    <td><span class="badge badge-pending" style="background:#f1f5f9; color:var(--color-text-secondary); font-size:10px;">{{ booking.booking_source }}</span></td>
+                    <td><span class="badge badge-{{ booking.status|lower }}">{{ booking.status }}</span></td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="7" style="text-align: center; color: var(--color-text-secondary); padding: 24px;">
+                        No stay logs found for this guest.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% else %}
+<!-- DIRECTORY SCREEN -->
+<div class="card" style="margin-bottom: 24px;">
+    <div class="card-head">
+        <div class="card-title"><i class="ti ti-users" aria-hidden="true"></i> Guest Directory</div>
+        <form method="GET" action="{{ url_for('guests.guests_screen') }}" class="filters">
+            <input type="text" name="search" placeholder="Search guest name / email / phone..." value="{{ search }}" style="width:280px;">
+            <button type="submit" class="btn-primary btn-sm"><i class="ti ti-search" aria-hidden="true"></i> Search</button>
+        </form>
+    </div>
+    
+    <div class="table-container">
+        <table class="tbl">
+            <thead>
+                <tr>
+                    <th>Customer ID</th>
+                    <th>Guest Details</th>
+                    <th>Email Address</th>
+                    <th>Phone Number</th>
+                    <th>Document Type</th>
+                    <th>Document Number</th>
+                    <th style="text-align: center;">Total Bookings</th>
+                    <th style="text-align: center;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for guest_data in guests %}
+                <tr>
+                    <td style="font-family: var(--font-display); font-weight: 600; color: var(--color-text-secondary);">#GST-{{ guest_data.guest.customer_id }}</td>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <div class="avatar-top" style="width: 32px; height: 32px; font-size: 11px;">
+                                {{ guest_data.guest.first_name[0] }}{{ guest_data.guest.last_name[0] }}
+                            </div>
+                            <div>
+                                <span style="font-weight: 600;">{{ guest_data.guest.first_name }} {{ guest_data.guest.last_name }}</span>
+                                {% if guest_data.is_repeat %}
+                                    <span class="badge badge-pending" style="font-size: 9px; padding: 1px 6px; margin-left: 4px;">Repeat</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </td>
+                    <td>{{ guest_data.guest.email }}</td>
+                    <td>{{ guest_data.guest.phone or '-' }}</td>
+                    <td>{{ guest_data.guest.id_type or '-' }}</td>
+                    <td style="font-family: monospace; font-size: 12px;">{{ guest_data.guest.id_number or '-' }}</td>
+                    <td style="text-align: center; font-weight: 600; color: var(--color-accent-primary);">{{ guest_data.booking_count }}</td>
+                    <td style="text-align: center;">
+                        <div style="display: flex; gap: 4px; justify-content: center; align-items: center;">
+                            <a href="{{ url_for('guests.guest_detail', id=guest_data.guest.customer_id) }}" class="icon-btn" title="View Profile">
+                                <i class="ti ti-eye" aria-hidden="true"></i>
+                            </a>
+                            <a href="{{ url_for('guests.delete_guest', id=guest_data.guest.customer_id) }}" class="icon-btn del" title="Delete Profile" onclick="return confirm('Delete this guest profile?');">
+                                <i class="ti ti-trash" aria-hidden="true"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="8" style="text-align:center; padding:30px; color:var(--color-text-secondary);">
+                        No guests registered in directory.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
 
-    <input
-        type="text"
-        name="last_name"
-        placeholder="Last Name"
-        required
-    >
-
-    <input
-        type="email"
-        name="email"
-        placeholder="Email"
-    >
-
-    <input
-        type="text"
-        name="phone"
-        placeholder="Phone"
-    >
-
-    <input
-        type="text"
-        name="nationality"
-        placeholder="Nationality"
-    >
-
-    <button type="submit">
-        Add Guest
-    </button>
-
-</form>
-
-<hr>
-
-<table border="1" cellpadding="10">
-
-    <tr>
-        <th>ID</th>
-        <th>Name</th>
-        <th>Email</th>
-        <th>Phone</th>
-        <th>Nationality</th>
-        <th>Action</th>
-    </tr>
-
-    {% for guest in guests %}
-
-    <tr>
-
-        <td>{{ guest.guest_id }}</td>
-
-        <td>
-            {{ guest.first_name }}
-            {{ guest.last_name }}
-        </td>
-
-        <td>{{ guest.email }}</td>
-
-        <td>{{ guest.phone }}</td>
-
-        <td>{{ guest.nationality }}</td>
-
-        <td>
-
-            <a href="/delete_guest/{{ guest.guest_id }}">
-                Delete
-            </a>
-
-        </td>
-
-    </tr>
-
-    {% endfor %}
-
-</table>
+<!-- Add New Guest Card -->
+<div class="card">
+    <div class="card-head">
+        <div class="card-title"><i class="ti ti-user-plus" style="color:var(--color-accent-primary);"></i> Add New Guest Profile</div>
+    </div>
+    <form action="{{ url_for('guests.add_guest') }}" method="POST">
+        <div class="form-grid">
+            <div class="form-group">
+                <label>First Name *</label>
+                <input type="text" name="first_name" placeholder="e.g. Ahmed" required>
+            </div>
+            <div class="form-group">
+                <label>Last Name *</label>
+                <input type="text" name="last_name" placeholder="e.g. Sultan" required>
+            </div>
+            <div class="form-group">
+                <label>Email Address *</label>
+                <input type="email" name="email" placeholder="e.g. ahmed.sultan@email.com" required>
+            </div>
+            <div class="form-group">
+                <label>Phone Number</label>
+                <input type="text" name="phone" placeholder="e.g. 0300-1234567">
+            </div>
+            <div class="form-group">
+                <label>Identity Document Type</label>
+                <select name="id_type">
+                    <option value="">Select document type</option>
+                    <option value="CNIC">CNIC</option>
+                    <option value="Passport">Passport</option>
+                    <option value="Driving License">Driving License</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Document Number</label>
+                <input type="text" name="id_number" placeholder="e.g. 42101-1234567-1">
+            </div>
+        </div>
+        <div style="margin-top:20px; display:flex; justify-content:flex-end;">
+            <button type="submit" class="btn-primary" style="padding: 8px 24px;">
+                <i class="ti ti-device-floppy" aria-hidden="true"></i> Register Guest
+            </button>
+        </div>
+    </form>
+</div>
+{% endif %}
+{% endblock %}

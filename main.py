@@ -208,13 +208,33 @@ def init_database():
         
         # === Extras ===
         extras = [
-            Extra(extra_name='Extra Bed', price=1500),
-            Extra(extra_name='Airport Transfer', price=3000),
-            Extra(extra_name='Late Checkout', price=2000),
-            Extra(extra_name='Room Service', price=1000),
-            Extra(extra_name='Spa Access', price=2500),
+            Extra(extra_name='Internet access', price=1000, description='High-speed premium WiFi for all devices.'),
+            Extra(extra_name='Extra Bed', price=1500, description='Foldable additional bed setup for guests.'),
+            Extra(extra_name='Fruit basket', price=1200, description='Fresh seasonal fruits delivered to the room.'),
+            Extra(extra_name='Airport Transfer', price=3000, description='Private pickup and drop-off service.'),
+            Extra(extra_name='Late Checkout', price=2000, description='Extend checkout timing based on availability.'),
+            Extra(extra_name='Spa Access', price=2500, description='Complimentary entry to the luxury spa & sauna room.'),
+            Extra(extra_name='Baby cot', price=1800, description='Comfortable infant cot with bedding included.'),
+            Extra(extra_name='Bottle of wine', price=3500, description='Premium red or white wine served chilled.'),
+            Extra(extra_name='Parking space', price=800, description='Reserved secured parking inside premises.'),
         ]
         db.session.add_all(extras)
+        db.session.commit()
+
+        # === Booking Room Extras ===
+        booking_room_extras = [
+            BookingRoomExtra(booking_room_id=1, extra_id=1, quantity=1),
+            BookingRoomExtra(booking_room_id=1, extra_id=3, quantity=1),
+            BookingRoomExtra(booking_room_id=2, extra_id=2, quantity=1),
+            BookingRoomExtra(booking_room_id=2, extra_id=4, quantity=1),
+            BookingRoomExtra(booking_room_id=3, extra_id=1, quantity=1),
+            BookingRoomExtra(booking_room_id=4, extra_id=1, quantity=1),
+            BookingRoomExtra(booking_room_id=4, extra_id=5, quantity=1),
+            BookingRoomExtra(booking_room_id=5, extra_id=6, quantity=1),
+            BookingRoomExtra(booking_room_id=6, extra_id=2, quantity=1),
+            BookingRoomExtra(booking_room_id=7, extra_id=1, quantity=1),
+        ]
+        db.session.add_all(booking_room_extras)
         db.session.commit()
         
         # === Service Categories ===

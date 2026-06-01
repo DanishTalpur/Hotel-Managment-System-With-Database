@@ -85,7 +85,7 @@ def reservations_screen():
             br = booking.booking_rooms[0]
             room_number = br.room.room_number if br.room else 'N/A'
             if br.rate:
-                rate_name = br.rate_type.rate_name if br.rate_type else 'Standard'
+                rate_name = br.rate.rate_type.rate_name if br.rate.rate_type else 'Standard'
             num_guests = br.num_guests
         
         # Check if repeat guest
@@ -101,8 +101,9 @@ def reservations_screen():
         })
     
     return render_template(
-        'index.html',
+        'reservations.html',
         active='reservations',
+        current_date=datetime.now().strftime('%A, %d %B %Y'),
         bookings=bookings_data,
         stats=stats,
         customers=customers,
