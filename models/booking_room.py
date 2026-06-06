@@ -21,3 +21,4 @@ class BookingRoomExtra(db.Model):
     booking_room_id = db.Column(db.Integer, db.ForeignKey('booking_room.booking_room_id'), primary_key=True)
     extra_id = db.Column(db.Integer, db.ForeignKey('extra.extra_id'), primary_key=True)
     quantity = db.Column(db.Integer, nullable=False, default=1)
+    source = db.Column(db.String(20), primary_key=True, nullable=False, default='booking')

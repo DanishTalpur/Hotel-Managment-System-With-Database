@@ -110,11 +110,14 @@
                             </form>
                             {% endif %}
                             {% if booking_data.booking.status == 'checked_in' %}
-                            <form method="POST" action="{{ url_for('reservations.checkout_reservation', id=booking_data.booking.booking_id) }}" style="display:inline;">
-                                <button type="submit" class="icon-btn" title="Check-out" style="color:#b45309;">
-                                    <i class="ti ti-logout" aria-hidden="true"></i>
-                                </button>
-                            </form>
+                            <a href="{{ url_for('reservations.checkout_screen', id=booking_data.booking.booking_id) }}" class="icon-btn" title="Check-out" style="color:#b45309;">
+                                <i class="ti ti-logout" aria-hidden="true"></i>
+                            </a>
+                            {% endif %}
+                            {% if booking_data.booking.status in ['checkout', 'checked_out'] and booking_data.invoice_id %}
+                            <a href="{{ url_for('invoices.invoice_detail', id=booking_data.invoice_id) }}" class="icon-btn" title="View Invoice" style="color:var(--color-accent-primary);">
+                                <i class="ti ti-receipt" aria-hidden="true"></i>
+                            </a>
                             {% endif %}
                             <form method="POST" action="{{ url_for('reservations.delete_reservation', id=booking_data.booking.booking_id) }}" style="display:inline;" onsubmit="return confirm('Delete this reservation?');">
                                 <button type="submit" class="icon-btn del" title="Delete">
@@ -167,30 +170,30 @@
         <div class="form-section">Stay Details</div>
         <div class="form-grid">
             <div class="form-group">
-                <label>Room Type *</label>
-                <select name="room_type_id" required>
-                    <option value="">Select room type</option>
-                    {% for rt in room_types %}
-                    <option value="{{ rt.room_type_id }}">{{ rt.type_name }}</option>
+                <label>Select Room *</label>
+                <select name="room_id" id="room_id" required>
+                    <option value="">Select available room</option>
+                    {% for room in available_rooms %}
+                    <option value="{{ room.room_id }}" data-room-type="{{ room.room_type_id }}">Room {{ room.room_number }} ({{ room.room_type.type_name }})</option>
                     {% endfor %}
                 </select>
             </div>
             <div class="form-group">
                 <label>Rate Plan *</label>
-                <select name="rate_id" required>
+                <select name="rate_id" id="rate_id" required>
                     <option value="">Select rate plan</option>
                     {% for rate in rates %}
-                    <option value="{{ rate.rate_id }}">{{ rate.rate_type.rate_name }} - PKR {{ "%.0f"|format(rate.amount) }}</option>
+                    <option value="{{ rate.rate_id }}" data-room-type="{{ rate.room_type_id }}">{{ rate.rate_type.rate_name }} ({{ rate.occupancy_type.name }}) - PKR {{ "%.0f"|format(rate.amount) }}</option>
                     {% endfor %}
                 </select>
             </div>
             <div class="form-group">
                 <label>Planned Check-in Date *</label>
-                <input type="date" name="planned_checkin" required>
+                <input type="date" name="planned_checkin" id="planned_checkin" required>
             </div>
             <div class="form-group">
                 <label>Planned Check-out Date *</label>
-                <input type="date" name="planned_checkout" required>
+                <input type="date" name="planned_checkout" id="planned_checkout" required>
             </div>
             <div class="form-group">
                 <label>Number of Guests *</label>
@@ -206,6 +209,18 @@
             </div>
         </div>
         
+        <div class="form-section">Booking Extras (Optional)</div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; margin-bottom: 24px;">
+            {% for extra in extras %}
+            <div style="display: flex; align-items: center; gap: 8px; background: var(--color-background-secondary); padding: 12px; border-radius: var(--border-radius-md); border: 1px solid #e2e8f0;">
+                <input type="checkbox" name="extras" value="{{ extra.extra_id }}" id="extra-{{ extra.extra_id }}">
+                <label for="extra-{{ extra.extra_id }}" style="font-size: 13px; font-weight: 500; cursor: pointer; margin-bottom: 0;">
+                    {{ extra.extra_name }} (+PKR {{ "%.0f"|format(extra.price) }})
+                </label>
+            </div>
+            {% endfor %}
+        </div>
+        
         <div style="margin-top:20px; display:flex; justify-content:flex-end;">
             <button type="submit" class="btn-primary" style="padding: 10px 24px;">
                 <i class="ti ti-device-floppy" aria-hidden="true"></i> Create Booking
@@ -213,4 +228,49 @@
         </div>
     </form>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const checkinInput = document.getElementById('planned_checkin');
+        const checkoutInput = document.getElementById('planned_checkout');
+        
+        if (checkinInput && checkoutInput) {
+            checkinInput.addEventListener('change', function() {
+                if (this.value) {
+                    const nextDay = new Date(this.value);
+                    nextDay.setDate(nextDay.getDate() + 1);
+                    const nextDayStr = nextDay.toISOString().split('T')[0];
+                    checkoutInput.min = nextDayStr;
+                    if (!checkoutInput.value || checkoutInput.value <= this.value) {
+                        checkoutInput.value = nextDayStr;
+                    }
+                }
+            });
+        }
+        
+        const roomSelect = document.getElementById('room_id');
+        const rateSelect = document.getElementById('rate_id');
+        const originalRatesOptions = rateSelect ? Array.from(rateSelect.options) : [];
+        
+        if (roomSelect && rateSelect) {
+            roomSelect.addEventListener('change', function() {
+                const selectedOption = this.options[this.selectedIndex];
+                const roomTypeId = selectedOption ? selectedOption.getAttribute('data-room-type') : '';
+                
+                // Clear options
+                rateSelect.innerHTML = '';
+                
+                // Keep only matching options
+                originalRatesOptions.forEach(opt => {
+                    const optRoomTypeId = opt.getAttribute('data-room-type');
+                    if (!opt.value || optRoomTypeId === roomTypeId) {
+                        rateSelect.appendChild(opt.cloneNode(true));
+                    }
+                });
+            });
+        }
+    });
+</script>
 {% endblock %}

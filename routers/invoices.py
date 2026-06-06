@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
-from models import Invoice, Booking, BookingRoom, Stay, Customer, Room
+from models import Invoice, Booking, BookingRoom, Stay, Customer, Room, BookingRoomExtra, Extra
 from database import db
 from datetime import datetime, date
 
@@ -83,8 +83,12 @@ def invoice_detail(id):
     
     # Get stay details
     stay_charges = []
+    service_charges = []
+    extra_charges = []
+    
     if booking:
         for br in booking.booking_rooms:
+            # 1. Stay charges
             for stay in br.stays:
                 room = Room.query.get(br.room_id)
                 stay_charges.append({
@@ -92,6 +96,56 @@ def invoice_detail(id):
                     'room_number': room.room_number if room else 'N/A',
                     'charge': stay.room_charge
                 })
+                
+    # 2. Add-on services from InvoiceService snapshot table
+    from models import InvoiceService
+    inv_services = InvoiceService.query.filter_by(invoice_id=id).all()
+    if inv_services:
+        for ss in inv_services:
+            service_charges.append({
+                'name': ss.item_name,
+                'quantity': ss.quantity,
+                'unit_price': ss.unit_price,
+                'total_price': ss.line_total
+            })
+    else:
+        # Fallback to live query for backward compatibility (pre-seeded invoices)
+        if booking:
+            for br in booking.booking_rooms:
+                for stay in br.stays:
+                    for ss in stay.stay_services:
+                        service_charges.append({
+                            'name': ss.service_item.item_name if ss.service_item else 'Unknown Service',
+                            'quantity': ss.quantity,
+                            'unit_price': ss.unit_price,
+                            'total_price': ss.total_price
+                        })
+
+    # 3. Extras from InvoiceExtra snapshot table
+    from models import InvoiceExtra
+    inv_extras = InvoiceExtra.query.filter_by(invoice_id=id).all()
+    if inv_extras:
+        for ie in inv_extras:
+            extra_charges.append({
+                'name': ie.extra_name,
+                'quantity': ie.quantity,
+                'price': ie.unit_price,
+                'total_price': ie.line_total
+            })
+    else:
+        # Fallback to live query for backward compatibility (pre-seeded invoices)
+        if booking:
+            for br in booking.booking_rooms:
+                bre_items = BookingRoomExtra.query.filter_by(booking_room_id=br.booking_room_id).all()
+                for bre in bre_items:
+                    extra = Extra.query.get(bre.extra_id)
+                    if extra:
+                        extra_charges.append({
+                            'name': extra.extra_name,
+                            'quantity': bre.quantity,
+                            'price': extra.price,
+                            'total_price': extra.price * bre.quantity
+                        })
     
     return render_template(
         'invoices.html',
@@ -101,6 +155,8 @@ def invoice_detail(id):
         booking=booking,
         customer=customer,
         stay_charges=stay_charges,
+        service_charges=service_charges,
+        extra_charges=extra_charges,
         view_detail=True
     )
 
@@ -112,29 +168,86 @@ def generate_invoice(booking_id):
     existing_invoice = Invoice.query.filter_by(booking_id=booking_id).first()
     if existing_invoice:
         flash('Invoice already exists for this booking!', 'error')
-        return redirect(url_for('invoices.invoices_screen'))
+        return redirect(url_for('invoices.invoice_detail', id=existing_invoice.invoice_id))
     
-    # Calculate total from stays
-    total = 0
+    # Calculate room stays total
+    room_total = 0
     for br in booking.booking_rooms:
         for stay in br.stays:
-            total += stay.room_charge
+            room_total += stay.room_charge
+            
+    # Calculate service charges total
+    service_total = 0
+    logged_services = []
+    for br in booking.booking_rooms:
+        for stay in br.stays:
+            for ss in stay.stay_services:
+                service_total += ss.total_price
+                logged_services.append(ss)
+                
+    # Calculate extras total
+    extra_total = 0
+    bre_items = []
+    for br in booking.booking_rooms:
+        extras_for_room = BookingRoomExtra.query.filter_by(booking_room_id=br.booking_room_id).all()
+        bre_items.extend(extras_for_room)
+        for bre in extras_for_room:
+            extra = Extra.query.get(bre.extra_id)
+            if extra:
+                extra_total += extra.price * bre.quantity
+                
+    subtotal = room_total + service_total + extra_total
     
-    if total == 0:
+    if subtotal == 0:
         flash('No charges found for this booking!', 'error')
         return redirect(url_for('invoices.invoices_screen'))
     
     # Create invoice
+    tax_amount = subtotal * 0.16
+    total_amount = subtotal + tax_amount
     invoice = Invoice(
         booking_id=booking_id,
         issued_date=date.today(),
-        subtotal=total,
-        tax_amount=total * 0.16,  # 16% tax
-        total_amount=total * 1.16,
+        room_total=room_total,
+        service_total=service_total,
+        extra_total=extra_total,
+        subtotal=subtotal,
+        tax_amount=tax_amount,
+        total_amount=total_amount,
         paid_amount=0,
         payment_status='unpaid'
     )
     db.session.add(invoice)
+    db.session.flush()
+    
+    # Create InvoiceExtra (Snapshot)
+    from models import InvoiceExtra
+    for bre in bre_items:
+        extra = Extra.query.get(bre.extra_id)
+        if extra:
+            invoice_extra = InvoiceExtra(
+                invoice_id=invoice.invoice_id,
+                extra_id=bre.extra_id,
+                extra_name=extra.extra_name,
+                quantity=bre.quantity,
+                unit_price=extra.price,
+                line_total=extra.price * bre.quantity
+            )
+            db.session.add(invoice_extra)
+            
+    # Create InvoiceService (Snapshot)
+    from models import InvoiceService
+    for ss in logged_services:
+        invoice_svc = InvoiceService(
+            invoice_id=invoice.invoice_id,
+            service_item_id=ss.service_item_id,
+            item_name=ss.service_item.item_name if ss.service_item else 'Unknown Service',
+            quantity=ss.quantity,
+            unit_price=ss.unit_price,
+            line_total=ss.total_price
+        )
+        db.session.add(invoice_svc)
+        
     db.session.commit()
     
     flash('Invoice generated successfully!', 'success')

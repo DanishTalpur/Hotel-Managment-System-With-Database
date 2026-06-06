@@ -7,7 +7,7 @@ from models import (
     Extra, BookingRoomExtra,
     ServiceCategory, ServiceItem,
     Stay, StayService,
-    Invoice
+    Invoice, InvoiceExtra, InvoiceService, Payment
 )
 from datetime import datetime, date, timedelta
 import os
@@ -273,6 +273,7 @@ def init_database():
                     stays.append(Stay(
                         booking_room_id=br.booking_room_id,
                         stay_date=current_date,
+                        applied_rate=rate.amount,
                         room_charge=rate.amount
                     ))
                     current_date += timedelta(days=1)
@@ -280,26 +281,57 @@ def init_database():
         db.session.commit()
         
         # === Invoices ===
-        invoices = []
         for booking in bookings:
             if booking.status in ['checked_out', 'checkout']:
                 # Calculate total from stays
-                total = 0
+                room_total = 0
                 for br in booking.booking_rooms:
                     for stay in br.stays:
-                        total += stay.room_charge
+                        room_total += stay.room_charge
+                
+                # Calculate pre-booked extras
+                extra_total = 0
+                bre_items = []
+                for br in booking.booking_rooms:
+                    extras_for_room = BookingRoomExtra.query.filter_by(booking_room_id=br.booking_room_id).all()
+                    bre_items.extend(extras_for_room)
+                    for bre in extras_for_room:
+                        extra = Extra.query.get(bre.extra_id)
+                        if extra:
+                            extra_total += extra.price * bre.quantity
+                
+                subtotal = room_total + extra_total
+                tax_amount = subtotal * 0.16  # 16% tax
+                total_amount = subtotal + tax_amount
                 
                 invoice = Invoice(
                     booking_id=booking.booking_id,
                     issued_date=booking.actual_checkout or date.today(),
-                    subtotal=total,
-                    tax_amount=total * 0.16,  # 16% tax
-                    total_amount=total * 1.16,
-                    paid_amount=total * 1.16 if booking.status == 'checked_out' else 0,
+                    room_total=room_total,
+                    service_total=0.0,
+                    extra_total=extra_total,
+                    subtotal=subtotal,
+                    tax_amount=tax_amount,
+                    total_amount=total_amount,
+                    paid_amount=total_amount if booking.status == 'checked_out' else 0,
                     payment_status='paid' if booking.status == 'checked_out' else 'unpaid'
                 )
-                invoices.append(invoice)
-        db.session.add_all(invoices)
+                db.session.add(invoice)
+                db.session.flush()
+                
+                # Snapshot extras
+                for bre in bre_items:
+                    extra = Extra.query.get(bre.extra_id)
+                    if extra:
+                        invoice_extra = InvoiceExtra(
+                            invoice_id=invoice.invoice_id,
+                            extra_id=bre.extra_id,
+                            extra_name=extra.extra_name,
+                            quantity=bre.quantity,
+                            unit_price=extra.price,
+                            line_total=extra.price * bre.quantity
+                        )
+                        db.session.add(invoice_extra)
         db.session.commit()
         
         print("Database initialized successfully with sample data!")

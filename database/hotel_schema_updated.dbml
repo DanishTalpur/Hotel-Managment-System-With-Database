@@ -1,0 +1,219 @@
+// ============================================================
+// HOTEL DATABASE SCHEMA — UPDATED
+// Changes from brief gap analysis:
+//   [1] BookingRoomExtra — added `source` field
+//   [2] NEW: InvoiceExtra table
+//   [3] NEW: InvoiceService table
+//   [4] NEW: Payment table
+//   [5] Stay — added unique index on (booking_room_id, stay_date)
+// ============================================================
+
+Table RoomType {
+  room_type_id INT [pk, increment, not null]
+  type_name VARCHAR(50) [not null]
+  description VARCHAR(255)
+}
+
+Table OccupancyType {
+  occupancy_type_id INT [pk, increment, not null]
+  name VARCHAR(50) [not null]
+  min_guests INT [not null]
+  max_guests INT [not null]
+}
+
+Table RoomOccupancy {
+  room_type_id INT [not null, ref: > RoomType.room_type_id]
+  occupancy_type_id INT [not null, ref: > OccupancyType.occupancy_type_id]
+
+  indexes {
+    (room_type_id, occupancy_type_id) [pk]
+  }
+}
+
+Table RoomAttribute {
+  attribute_id INT [pk, increment, not null]
+  attribute_name VARCHAR(100) [not null]
+}
+
+Table Room {
+  room_id INT [pk, increment, not null]
+  room_number INT [not null]
+  floor_number INT [not null]
+  room_type_id INT [not null, ref: > RoomType.room_type_id]
+  status VARCHAR(20) [not null, default: 'available', note: 'allowed: available, occupied, maintenance, blocked']
+}
+
+Table RoomAttributeMap {
+  room_id INT [not null, ref: > Room.room_id]
+  attribute_id INT [not null, ref: > RoomAttribute.attribute_id]
+
+  indexes {
+    (room_id, attribute_id) [pk]
+  }
+}
+
+Table RateType {
+  rate_type_id INT [pk, increment, not null]
+  rate_name VARCHAR(100) [not null]
+  description VARCHAR(255)
+  is_base_rate BIT [not null, default: 0, note: 'Only one row should be set to 1']
+}
+
+Table Rate {
+  rate_id INT [pk, increment, not null]
+  rate_type_id INT [not null, ref: > RateType.rate_type_id]
+  room_type_id INT [not null, ref: > RoomType.room_type_id]
+  occupancy_type_id INT [not null, ref: > OccupancyType.occupancy_type_id]
+  start_date DATE [not null]
+  end_date DATE [not null]
+  amount DECIMAL(10,2) [not null]
+
+  Note: 'Composite FK: (room_type_id, occupancy_type_id) references RoomOccupancy'
+}
+
+Table Facility {
+  facility_id INT [pk, increment, not null]
+  facility_name VARCHAR(100) [not null]
+  description VARCHAR(255)
+}
+
+Table RateFacility {
+  rate_type_id INT [not null, ref: > RateType.rate_type_id]
+  facility_id INT [not null, ref: > Facility.facility_id]
+
+  indexes {
+    (rate_type_id, facility_id) [pk]
+  }
+}
+
+Table Extra {
+  extra_id INT [pk, increment, not null]
+  extra_name VARCHAR(100) [not null]
+  price DECIMAL(10,2) [not null]
+}
+
+Table ServiceCategory {
+  category_id INT [pk, increment, not null]
+  category_name VARCHAR(100) [not null]
+}
+
+Table ServiceItem {
+  service_item_id INT [pk, increment, not null]
+  category_id INT [not null, ref: > ServiceCategory.category_id]
+  item_name VARCHAR(100) [not null]
+  unit_price DECIMAL(10,2) [not null]
+}
+
+Table Customer {
+  customer_id INT [pk, increment, not null]
+  first_name VARCHAR(100) [not null]
+  last_name VARCHAR(100) [not null]
+  email VARCHAR(150) [not null]
+  phone VARCHAR(20)
+  id_type VARCHAR(50)
+  id_number VARCHAR(50)
+  created_at DATETIME2 [not null]
+}
+
+Table Booking {
+  booking_id INT [pk, increment, not null]
+  customer_id INT [not null, ref: > Customer.customer_id]
+  planned_checkin DATE [not null]
+  planned_checkout DATE [not null]
+  actual_checkin DATE
+  actual_checkout DATE
+  status VARCHAR(20) [not null, default: 'booked', note: 'allowed: booked, checked_in, checked_out, cancelled, no_show']
+  booking_source VARCHAR(50) [not null]
+  is_walkin BIT [not null, default: 0]
+  created_at DATETIME2 [not null]
+}
+
+Table BookingRoom {
+  booking_room_id INT [pk, increment, not null]
+  booking_id INT [not null, ref: > Booking.booking_id]
+  room_id INT [not null, ref: > Room.room_id]
+  rate_id INT [not null, ref: > Rate.rate_id]
+  num_guests INT [not null]
+}
+
+// [CHANGE 1] Added `source` to distinguish extras added at booking vs check-in
+Table BookingRoomExtra {
+  booking_room_id INT [not null, ref: > BookingRoom.booking_room_id]
+  extra_id INT [not null, ref: > Extra.extra_id]
+  quantity INT [not null, default: 1]
+  source VARCHAR(20) [not null, default: 'booking', note: 'allowed: booking, checkin']
+
+  indexes {
+    (booking_room_id, extra_id, source ) [pk]
+  }
+}
+
+Table Stay {
+  stay_id INT [pk, increment, not null]
+  booking_room_id INT [not null, ref: > BookingRoom.booking_room_id]
+  stay_date DATE [not null]
+  applied_rate DECIMAL(10,2) [not null]
+  room_charge DECIMAL(10,2) [not null]
+
+  // [CHANGE 5] Unique constraint — prevents duplicate night records per room
+  indexes {
+    (booking_room_id, stay_date) [unique]
+  }
+}
+
+Table StayService {
+  stay_service_id INT [pk, increment, not null]
+  stay_id INT [not null, ref: > Stay.stay_id]
+  service_item_id INT [not null, ref: > ServiceItem.service_item_id]
+  quantity INT [not null]
+  unit_price DECIMAL(10,2) [not null]
+  total_price DECIMAL(10,2) [not null]
+  recorded_at DATETIME2 [not null]
+}
+
+Table Invoice {
+  invoice_id INT [pk, increment, not null]
+  booking_id INT [not null, ref: - Booking.booking_id]
+  issued_date DATE [not null]
+  room_total DECIMAL(10,2) [not null, default: 0]
+  service_total DECIMAL(10,2) [not null, default: 0]
+  extra_total DECIMAL(10,2) [not null, default: 0]
+  subtotal DECIMAL(10,2) [not null]
+  tax_amount DECIMAL(10,2) [not null, default: 0]
+  total_amount DECIMAL(10,2) [not null]
+  paid_amount DECIMAL(10,2) [not null, default: 0]
+  payment_status VARCHAR(20) [not null, default: 'unpaid', note: 'allowed: unpaid, partial, paid, refunded']
+}
+
+// [CHANGE 2] NEW — line-item breakdown of extras on the invoice
+Table InvoiceExtra {
+  invoice_extra_id INT [pk, increment, not null]
+  invoice_id INT [not null, ref: > Invoice.invoice_id]
+  extra_id INT [not null, ref: > Extra.extra_id]
+  extra_name VARCHAR(100) [not null, note: 'Snapshotted at invoice time']
+  quantity INT [not null]
+  unit_price DECIMAL(10,2) [not null, note: 'Snapshotted at invoice time']
+  line_total DECIMAL(10,2) [not null]
+}
+
+// [CHANGE 3] NEW — services logged at checkout, itemised on the invoice
+Table InvoiceService {
+  invoice_service_id INT [pk, increment, not null]
+  invoice_id INT [not null, ref: > Invoice.invoice_id]
+  service_item_id INT [not null, ref: > ServiceItem.service_item_id]
+  item_name VARCHAR(100) [not null, note: 'Snapshotted at invoice time']
+  quantity INT [not null]
+  unit_price DECIMAL(10,2) [not null, note: 'Snapshotted at invoice time']
+  line_total DECIMAL(10,2) [not null]
+}
+
+// [CHANGE 4] NEW — tracks individual payment transactions against an invoice
+Table Payment {
+  payment_id INT [pk, increment, not null]
+  invoice_id INT [not null, ref: > Invoice.invoice_id]
+  payment_date DATETIME2 [not null]
+  amount DECIMAL(10,2) [not null]
+  payment_method VARCHAR(50) [not null, note: 'allowed: cash, card, bank_transfer, online']
+  reference_number VARCHAR(100)
+  notes VARCHAR(255)
+}

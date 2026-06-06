@@ -14,3 +14,6 @@ from .service_item import ServiceItem
 from .stay import Stay
 from .stay_service import StayService
 from .invoice import Invoice
+from .invoice_extra import InvoiceExtra
+from .invoice_service import InvoiceService
+from .payment import Payment

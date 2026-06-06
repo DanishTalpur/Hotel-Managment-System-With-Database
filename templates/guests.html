@@ -169,15 +169,15 @@
             </div>
             <div class="form-group">
                 <label>Email Address *</label>
-                <input type="email" name="email" placeholder="e.g. ahmed.sultan@email.com" required>
+                <input type="email" name="email" placeholder="e.g. ahmed.sultan@gmail.com" pattern="[a-zA-Z0-9._%+-]+@gmail\.com$" title="Must be a valid Gmail address (ending in @gmail.com)" required>
             </div>
             <div class="form-group">
-                <label>Phone Number</label>
-                <input type="text" name="phone" placeholder="e.g. 0300-1234567">
+                <label>Phone Number *</label>
+                <input type="text" name="phone" placeholder="e.g. 03001234567" pattern="\d{11}" maxlength="11" minlength="11" title="Phone number must be exactly 11 digits" required>
             </div>
             <div class="form-group">
                 <label>Identity Document Type</label>
-                <select name="id_type">
+                <select name="id_type" id="id_type">
                     <option value="">Select document type</option>
                     <option value="CNIC">CNIC</option>
                     <option value="Passport">Passport</option>
@@ -186,7 +186,7 @@
             </div>
             <div class="form-group">
                 <label>Document Number</label>
-                <input type="text" name="id_number" placeholder="e.g. 42101-1234567-1">
+                <input type="text" name="id_number" id="id_number" placeholder="e.g. 4210112345671">
             </div>
         </div>
         <div style="margin-top:20px; display:flex; justify-content:flex-end;">
@@ -197,4 +197,33 @@
     </form>
 </div>
 {% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const idTypeSelect = document.getElementById('id_type');
+        const idNumberInput = document.getElementById('id_number');
+        
+        if (idTypeSelect && idNumberInput) {
+            idTypeSelect.addEventListener('change', function() {
+                if (this.value === 'CNIC') {
+                    idNumberInput.pattern = '\\d{13}';
+                    idNumberInput.maxLength = 13;
+                    idNumberInput.minLength = 13;
+                    idNumberInput.placeholder = 'e.g. 4210112345671 (13 digits)';
+                    idNumberInput.required = true;
+                    idNumberInput.title = "CNIC must be exactly 13 digits";
+                } else {
+                    idNumberInput.removeAttribute('pattern');
+                    idNumberInput.removeAttribute('maxLength');
+                    idNumberInput.removeAttribute('minLength');
+                    idNumberInput.placeholder = 'e.g. AB1234567';
+                    idNumberInput.required = false;
+                    idNumberInput.removeAttribute('title');
+                }
+            });
+        }
+    });
+</script>
 {% endblock %}

@@ -263,6 +263,53 @@ Booking ──< Invoice
 
 ---
 
+## 🧾 Checkout & Invoice Workflow
+
+Checking out a guest is fully integrated with stay calculation and invoice generation.
+
+### What happens on check-out
+
+When staff click **Check-out** on a checked-in reservation, the system:
+
+1. Sets the booking status to `checkout` and records `actual_checkout` as today.
+2. Sets the assigned room status to `checkout` (ready for housekeeping).
+3. Calculates nights between actual check-in (or planned check-in) and check-out (minimum 1 night).
+4. Creates `Stay` records per room per night if none exist yet, using the booked rate amount.
+5. Computes the invoice subtotal from **room stay charges + stay services + booking extras**.
+6. Applies **16% GST** and saves an `Invoice` with status `unpaid`.
+7. Redirects immediately to the **Invoice Details** receipt page.
+
+### Invoice receipt layout
+
+The invoice detail view (`/invoices/<id>`) shows:
+
+| Section | Source |
+|---|---|
+| **Room Stay Charges** | One line per night per room from `Stay` records |
+| **Service Charges & Amenities** | Items from `StayService` linked to stay nights |
+| **Hotel Add-on Extras** | Quantities from `BookingRoomExtra` × `Extra` price |
+| **Totals** | Subtotal, 16% GST, grand total, paid amount, balance due |
+
+The printable receipt header includes the **StayDesk** branding, invoice number, guest/booking details, and issue date.
+
+### Printing & PDF download
+
+- **Print Receipt** — Uses browser print (`Ctrl+P`). Print CSS hides the sidebar, top bar, navigation buttons, and action controls so only `#invoice-printable-area` is printed.
+- **Download PDF** — Uses [html2pdf.js](https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/) (Cloudflare CDN) to export the same receipt area as a PDF file named `StayDesk-Invoice-INV-<id>.pdf`.
+
+### Step-by-step: check-out and invoicing
+
+1. Start the app: `python main.py`
+2. Open **Reservations** and locate a booking with status **Checked In**.
+3. Click the **Check-out** icon (logout) in the Actions column.
+4. You are redirected to the generated invoice receipt.
+5. Review room charges, services, extras, tax, and grand total.
+6. Use **Print Receipt** or **Download PDF** as needed.
+7. Click **Record Full Payment** to mark the invoice paid (optional).
+8. Return to **Reservations** — checked-out bookings show a **View Invoice** receipt icon linking back to the same invoice.
+
+---
+
 ## ⚙️ Installation & Setup
 
 ### Requirements
@@ -315,7 +362,12 @@ http://127.0.0.1:5000
 | POST | `/guests/add` | `add_guest` | Add new guest |
 | GET | `/guests/delete/<id>` | `delete_guest` | Delete a guest |
 | GET | `/invoices` | `invoices_view` | Invoice list with filters |
+| GET | `/invoices/<id>` | `invoice_detail` | Invoice receipt with charge breakdown |
+| POST | `/invoices/generate/<booking_id>` | `generate_invoice` | Manually generate invoice for a booking |
+| POST | `/invoices/partial_payment/<id>` | `partial_payment` | Record partial payment |
 | GET | `/invoices/mark_paid/<id>` | `mark_paid` | Mark invoice as paid |
+| POST | `/reservations/checkin/<id>` | `checkin_reservation` | Check in a guest |
+| POST | `/reservations/checkout/<id>` | `checkout_reservation` | Check out, generate stays & invoice |
 | GET | `/rates` | `rates_view` | Rate matrix screen |
 | POST | `/rates/add` | `add_rate` | Add new rate |
 | GET | `/rates/delete/<id>` | `delete_rate` | Delete a rate |
@@ -379,7 +431,6 @@ http://127.0.0.1:5000
 
 - Connect to live SQL Server database using `pyodbc`
 - Add user authentication (login/logout for staff roles)
-- Export invoices as PDF
 - Add a calendar/timeline view for reservations
 - Real-time room status updates
 - Email notifications for bookings and checkouts

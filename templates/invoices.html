@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="topbar">
+<div class="topbar no-print">
     <div>
         <div class="page-title">Invoices & Financials</div>
         <div class="page-sub">{{ current_date }}</div>
@@ -14,7 +14,7 @@
 {% if view_detail %}
 <!-- INVOICE DETAILS VIEW -->
 <div class="card" style="margin-bottom: 24px;">
-    <div class="card-head">
+    <div class="card-head no-print">
         <div class="card-title">
             <i class="ti ti-receipt" style="color:var(--color-accent-primary);"></i> Invoice Details — #INV-{{ invoice.invoice_id }}
         </div>
@@ -26,77 +26,121 @@
         </div>
     </div>
     
-    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:20px; padding-bottom:18px; border-bottom:1px solid #f1f5f9; flex-wrap:wrap; gap:16px;">
-        <div>
-            <div style="font-weight:700; font-size:16px; color:var(--color-text-primary); margin-bottom: 4px;">{{ customer.first_name }} {{ customer.last_name }}</div>
-            <div style="font-size:12px; color:var(--color-text-secondary);">Booking Identifier: #BK-{{ booking.booking_id }}</div>
-            <div style="font-size:12px; color:var(--color-text-secondary);">Stay Period: {{ booking.planned_checkin.strftime('%d %b %Y') }} &mdash; {{ booking.planned_checkout.strftime('%d %b %Y') }}</div>
-        </div>
-        <div style="text-align:right;">
-            <div style="font-size:11px; font-weight:600; color:var(--color-text-secondary); text-transform:uppercase; letter-spacing:0.05em;">Issue Date</div>
-            <div style="font-size:14px; font-weight:600; color:var(--color-text-primary); margin-top:2px;">{{ invoice.issued_date.strftime('%d %b %Y') }}</div>
-        </div>
-    </div>
-    
     <style>
         .invoice-item-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #f8fafc; font-size: 13px; }
         .invoice-item-row:last-child { border-bottom: none; }
         .receipt-section-header { font-size: 11px; font-weight: 700; color: var(--color-text-secondary); margin: 16px 0 8px; text-transform: uppercase; letter-spacing: 0.08em; }
+
+        @media print {
+            .sidebar,
+            .topbar,
+            .flash-messages,
+            .no-print { display: none !important; }
+            .main { margin-left: 0 !important; padding: 0 !important; }
+            body { background: #ffffff !important; }
+            .card { border: none !important; box-shadow: none !important; padding: 0 !important; margin: 0 !important; }
+            #invoice-printable-area { padding: 24px !important; }
+        }
     </style>
     
-    <!-- STAY CHARGES -->
-    <div class="receipt-section-header">Room Stay Charges</div>
-    {% for charge in stay_charges %}
-    <div class="invoice-item-row">
-        <span style="color:var(--color-text-secondary);">Room {{ charge.room_number }} &middot; Night stay ({{ charge.date.strftime('%d %b %Y') }})</span>
-        <span style="font-weight:600; font-family: monospace;">PKR {{ "%.0f"|format(charge.charge) }}</span>
-    </div>
-    {% else %}
-    <div style="font-size:12px; color:var(--color-text-tertiary); padding: 6px 0;">No room charge records registered.</div>
-    {% endfor %}
-    
-    <!-- ADD-ON SERVICES -->
-    <div class="receipt-section-header">Service Charges & Amenities</div>
-    <div class="invoice-item-row" style="border-bottom:none;">
-        <span style="color:var(--color-text-secondary); font-style: italic;">No additional service orders recorded on booking stay.</span>
-        <span style="font-weight:600; font-family: monospace;">PKR 0</span>
-    </div>
-    
-    <!-- EXTRAS -->
-    <div class="receipt-section-header">Hotel Add-on Extras</div>
-    <div class="invoice-item-row" style="border-bottom:none;">
-        <span style="color:var(--color-text-secondary); font-style: italic;">No custom extras requested.</span>
-        <span style="font-weight:600; font-family: monospace;">PKR 0</span>
-    </div>
-    
-    <div style="border-top: 1px solid #e2e8f0; margin-top: 20px; padding-top: 16px; display:flex; flex-direction:column; gap:8px;">
+    <div id="invoice-printable-area" style="background:#ffffff; padding: 10px;">
+        <!-- PRINT / PDF HEADER -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; border-bottom: 2px solid var(--color-accent-primary); padding-bottom: 12px;">
+            <div>
+                <span style="font-family: var(--font-display); font-size: 24px; font-weight: 800; color: var(--color-text-primary); display: flex; align-items: center; gap: 8px;">
+                    <i class="ti ti-building" style="color: var(--color-accent-primary); font-size: 24px;"></i> StayDesk
+                </span>
+                <div style="font-size: 11px; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;">Premium Hotel & Suites</div>
+            </div>
+            <div style="text-align: right;">
+                <div style="font-size: 18px; font-weight: 700; color: var(--color-text-primary); font-family: var(--font-display);">INVOICE RECEIPT</div>
+                <div style="font-size: 12px; color: var(--color-accent-primary); font-weight: 600;">#INV-{{ invoice.invoice_id }}</div>
+            </div>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:20px; padding-bottom:18px; border-bottom:1px solid #f1f5f9; flex-wrap:wrap; gap:16px;">
+            <div>
+                <div style="font-weight:700; font-size:16px; color:var(--color-text-primary); margin-bottom: 4px;">{{ customer.first_name }} {{ customer.last_name }}</div>
+                <div style="font-size:12px; color:var(--color-text-secondary);">Booking Identifier: #BK-{{ booking.booking_id }}</div>
+                <div style="font-size:12px; color:var(--color-text-secondary);">Stay Period: {{ booking.planned_checkin.strftime('%d %b %Y') }} &mdash; {{ booking.planned_checkout.strftime('%d %b %Y') }}</div>
+            </div>
+            <div style="text-align:right;">
+                <div style="font-size:11px; font-weight:600; color:var(--color-text-secondary); text-transform:uppercase; letter-spacing:0.05em;">Issue Date</div>
+                <div style="font-size:14px; font-weight:600; color:var(--color-text-primary); margin-top:2px;">{{ invoice.issued_date.strftime('%d %b %Y') }}</div>
+            </div>
+        </div>
+        
+        <!-- STAY CHARGES -->
+        <div class="receipt-section-header">Room Stay Charges</div>
+        {% for charge in stay_charges %}
         <div class="invoice-item-row">
-            <span style="color:var(--color-text-secondary);">Subtotal Amount</span>
-            <span style="font-weight:600; font-family: monospace;">PKR {{ "%.0f"|format(invoice.subtotal) }}</span>
+            <span style="color:var(--color-text-secondary);">Room {{ charge.room_number }} &middot; Night stay ({{ charge.date.strftime('%d %b %Y') }})</span>
+            <span style="font-weight:600; font-family: monospace;">PKR {{ "%.0f"|format(charge.charge) }}</span>
         </div>
+        {% else %}
+        <div style="font-size:12px; color:var(--color-text-tertiary); padding: 6px 0;">No room charge records registered.</div>
+        {% endfor %}
+        
+        <!-- ADD-ON SERVICES -->
+        <div class="receipt-section-header">Service Charges & Amenities</div>
+        {% for service in service_charges %}
         <div class="invoice-item-row">
-            <span style="color:var(--color-text-secondary);">GST Sales Tax (16%)</span>
-            <span style="font-weight:600; font-family: monospace;">PKR {{ "%.0f"|format(invoice.tax_amount) }}</span>
+            <span style="color:var(--color-text-secondary);">{{ service.name }} (x{{ service.quantity }})</span>
+            <span style="font-weight:600; font-family: monospace;">PKR {{ "%.0f"|format(service.total_price) }}</span>
         </div>
-        <div class="invoice-item-row" style="padding-top: 10px; border-top:1px solid #f1f5f9;">
-            <span style="font-size: 15px; font-weight: 700; color: var(--color-text-primary);">Grand Total</span>
-            <span style="font-size: 16px; font-weight: 700; color: var(--color-accent-primary); font-family: monospace;">PKR {{ "%.0f"|format(invoice.total_amount) }}</span>
+        {% else %}
+        <div class="invoice-item-row" style="border-bottom:none;">
+            <span style="color:var(--color-text-secondary); font-style: italic;">No additional service orders recorded on booking stay.</span>
+            <span style="font-weight:600; font-family: monospace;">PKR 0</span>
         </div>
+        {% endfor %}
+        
+        <!-- EXTRAS -->
+        <div class="receipt-section-header">Hotel Add-on Extras</div>
+        {% for extra in extra_charges %}
         <div class="invoice-item-row">
-            <span style="color:var(--color-text-secondary);">Paid Amount</span>
-            <span style="font-weight:600; color:#15803d; font-family: monospace;">PKR {{ "%.0f"|format(invoice.paid_amount) }}</span>
+            <span style="color:var(--color-text-secondary);">{{ extra.name }} (x{{ extra.quantity }})</span>
+            <span style="font-weight:600; font-family: monospace;">PKR {{ "%.0f"|format(extra.total_price) }}</span>
         </div>
-        <div class="invoice-item-row">
-            <span style="color:var(--color-text-secondary);">Balance Due</span>
-            <span style="font-weight:700; color:{% if invoice.total_amount - invoice.paid_amount > 0 %}#dc2626{% else %}#15803d{% endif %}; font-family: monospace;">
-                PKR {{ "%.0f"|format(invoice.total_amount - invoice.paid_amount) }}
-            </span>
+        {% else %}
+        <div class="invoice-item-row" style="border-bottom:none;">
+            <span style="color:var(--color-text-secondary); font-style: italic;">No custom extras requested.</span>
+            <span style="font-weight:600; font-family: monospace;">PKR 0</span>
+        </div>
+        {% endfor %}
+        
+        <div style="border-top: 1px solid #e2e8f0; margin-top: 20px; padding-top: 16px; display:flex; flex-direction:column; gap:8px;">
+            <div class="invoice-item-row">
+                <span style="color:var(--color-text-secondary);">Subtotal Amount</span>
+                <span style="font-weight:600; font-family: monospace;">PKR {{ "%.0f"|format(invoice.subtotal) }}</span>
+            </div>
+            <div class="invoice-item-row">
+                <span style="color:var(--color-text-secondary);">GST Sales Tax (16%)</span>
+                <span style="font-weight:600; font-family: monospace;">PKR {{ "%.0f"|format(invoice.tax_amount) }}</span>
+            </div>
+            <div class="invoice-item-row" style="padding-top: 10px; border-top:1px solid #f1f5f9;">
+                <span style="font-size: 15px; font-weight: 700; color: var(--color-text-primary);">Grand Total</span>
+                <span style="font-size: 16px; font-weight: 700; color: var(--color-accent-primary); font-family: monospace;">PKR {{ "%.0f"|format(invoice.total_amount) }}</span>
+            </div>
+            <div class="invoice-item-row">
+                <span style="color:var(--color-text-secondary);">Paid Amount</span>
+                <span style="font-weight:600; color:#15803d; font-family: monospace;">PKR {{ "%.0f"|format(invoice.paid_amount) }}</span>
+            </div>
+            <div class="invoice-item-row" style="border-bottom: none;">
+                <span style="color:var(--color-text-secondary);">Balance Due</span>
+                <span style="font-weight:700; color:{% if invoice.total_amount - invoice.paid_amount > 0 %}#dc2626{% else %}#15803d{% endif %}; font-family: monospace;">
+                    PKR {{ "%.0f"|format(invoice.total_amount - invoice.paid_amount) }}
+                </span>
+            </div>
         </div>
     </div>
     
-    <div style="display:flex; gap:10px; margin-top:20px; border-top: 1px solid #e2e8f0; padding-top:16px;">
+    <div class="no-print" style="display:flex; gap:10px; margin-top:20px; border-top: 1px solid #e2e8f0; padding-top:16px;">
         <button class="btn-outline" style="flex:1;" onclick="window.print();">
             <i class="ti ti-printer" aria-hidden="true"></i> Print Receipt
+        </button>
+        <button class="btn-primary" style="flex:1;" onclick="downloadPDF();">
+            <i class="ti ti-download" aria-hidden="true"></i> Download PDF
         </button>
         {% if invoice.payment_status == 'unpaid' %}
         <a href="{{ url_for('invoices.mark_paid', id=invoice.invoice_id) }}" class="btn-success" style="flex:1;">
@@ -203,5 +247,24 @@
         </table>
     </div>
 </div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+{% if view_detail %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script>
+    function downloadPDF() {
+        const element = document.getElementById('invoice-printable-area');
+        const options = {
+            margin: 10,
+            filename: 'StayDesk-Invoice-INV-{{ invoice.invoice_id }}.pdf',
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+        html2pdf().set(options).from(element).save();
+    }
+</script>
 {% endif %}
 {% endblock %}

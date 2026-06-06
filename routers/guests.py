@@ -46,13 +46,39 @@ def guests_screen():
 
 @guests_router.route('/guests/add', methods=['POST'])
 def add_guest():
+    first_name = request.form['first_name']
+    last_name = request.form['last_name']
+    email = request.form['email']
+    phone = request.form.get('phone', '').strip()
+    id_type = request.form.get('id_type', '')
+    id_number = request.form.get('id_number', '').strip()
+    
+    import re
+    
+    # 1. Gmail validation: must end with @gmail.com
+    if not email.endswith('@gmail.com') or not re.match(r'^[a-zA-Z0-9._%+-]+@gmail\.com$', email):
+        flash('Invalid email. Gmail must end with @gmail.com.', 'error')
+        return redirect(url_for('guests.guests_screen'))
+        
+    # 2. Phone validation: exactly 11 digits, numbers only
+    if phone:
+        if len(phone) != 11 or not phone.isdigit():
+            flash('Phone number must be exactly 11 digits long and contain only numbers.', 'error')
+            return redirect(url_for('guests.guests_screen'))
+            
+    # 3. CNIC validation: exactly 13 digits, numbers only
+    if id_type == 'CNIC':
+        if not id_number or len(id_number) != 13 or not id_number.isdigit():
+            flash('CNIC must be exactly 13 digits long and contain only numbers.', 'error')
+            return redirect(url_for('guests.guests_screen'))
+            
     guest = Customer(
-        first_name=request.form['first_name'],
-        last_name=request.form['last_name'],
-        email=request.form['email'],
-        phone=request.form.get('phone', ''),
-        id_type=request.form.get('id_type', ''),
-        id_number=request.form.get('id_number', ''),
+        first_name=first_name,
+        last_name=last_name,
+        email=email,
+        phone=phone,
+        id_type=id_type,
+        id_number=id_number,
         created_at=date.today()
     )
     

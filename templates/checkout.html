@@ -1,0 +1,199 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="topbar">
+    <div>
+        <div class="page-title">Guest Check-out</div>
+        <div class="page-sub">Review stay details and log service charges for #BK-{{ booking.booking_id }}</div>
+    </div>
+    <div class="top-actions">
+        <a href="{{ url_for('reservations.reservations_screen') }}" class="btn-outline">
+            <i class="ti ti-arrow-left" aria-hidden="true"></i> Back to Reservations
+        </a>
+    </div>
+</div>
+
+<div class="two-col">
+    <!-- Stay Summary Card -->
+    <div class="card">
+        <div class="card-head">
+            <div class="card-title">
+                <i class="ti ti-id" aria-hidden="true"></i> Stay Summary
+            </div>
+        </div>
+        
+        <div style="display:flex; flex-direction:column; gap:16px;">
+            <div style="display:flex; align-items:center; gap:12px; border-bottom:1px solid #e2e8f0; padding-bottom:12px;">
+                <div class="avatar-top" style="width:48px; height:48px; font-size:16px;">
+                    {{ customer.first_name[0] }}{{ customer.last_name[0] }}
+                </div>
+                <div>
+                    <div style="font-weight:700; font-size:16px;">{{ customer.first_name }} {{ customer.last_name }}</div>
+                    <div style="font-size:12px; color:var(--color-text-secondary);">{{ customer.email }} &middot; {{ customer.phone }}</div>
+                </div>
+            </div>
+            
+            <div style="display:grid; grid-template-columns: repeat(2, 1fr); gap:16px;">
+                <div>
+                    <div style="font-size:11px; font-weight:600; color:var(--color-text-tertiary); text-transform:uppercase;">Room Assigned</div>
+                    <div style="font-weight:600; font-size:14px; margin-top:2px;">Room {{ room.room_number }} ({{ room.room_type.type_name }})</div>
+                </div>
+                <div>
+                    <div style="font-size:11px; font-weight:600; color:var(--color-text-tertiary); text-transform:uppercase;">Rate Tier</div>
+                    <div style="font-weight:600; font-size:14px; margin-top:2px;">{{ rate.rate_type.rate_name }}</div>
+                </div>
+                <div>
+                    <div style="font-size:11px; font-weight:600; color:var(--color-text-tertiary); text-transform:uppercase;">Check-in Date</div>
+                    <div style="font-weight:600; font-size:14px; margin-top:2px;">{{ checkin_date.strftime('%d %b %Y') }}</div>
+                </div>
+                <div>
+                    <div style="font-size:11px; font-weight:600; color:var(--color-text-tertiary); text-transform:uppercase;">Check-out Date</div>
+                    <div style="font-weight:600; font-size:14px; margin-top:2px;">{{ checkout_date.strftime('%d %b %Y') }}</div>
+                </div>
+                <div>
+                    <div style="font-size:11px; font-weight:600; color:var(--color-text-tertiary); text-transform:uppercase;">Duration of Stay</div>
+                    <div style="font-weight:700; font-size:14px; color:var(--color-accent-primary); margin-top:2px;">{{ nights }} Night{{ 's' if nights > 1 else '' }}</div>
+                </div>
+                <div>
+                    <div style="font-size:11px; font-weight:600; color:var(--color-text-tertiary); text-transform:uppercase;">Number of Guests</div>
+                    <div style="font-weight:600; font-size:14px; margin-top:2px;">{{ booking_room.num_guests }}</div>
+                </div>
+            </div>
+            
+            <div style="border-top:1px solid #e2e8f0; padding-top:14px; margin-top:4px;">
+                <div style="font-size:13px; font-weight:700; margin-bottom:8px;">Charges Snapshot:</div>
+                <div style="display:flex; justify-content:space-between; margin-bottom:6px; font-size:13px;">
+                    <span style="color:var(--color-text-secondary);">Room Stay ({{ nights }} night{{ 's' if nights > 1 else '' }} &times; PKR {{ "%.0f"|format(rate.amount) }})</span>
+                    <span style="font-weight:600; font-family:monospace;">PKR {{ "%.0f"|format(room_total) }}</span>
+                </div>
+                {% if extra_charges %}
+                <div style="margin-top:10px; padding-top:10px; border-top:1px dashed #e2e8f0;">
+                    <div style="font-size:12px; font-weight:600; color:var(--color-text-secondary); margin-bottom:6px;">Booking Extras Included:</div>
+                    {% for extra in extra_charges %}
+                    <div style="display:flex; justify-content:space-between; font-size:12px; color:var(--color-text-secondary); margin-bottom:4px;">
+                        <span>&bull; {{ extra.name }} (x{{ extra.quantity }})</span>
+                        <span style="font-family:monospace;">PKR {{ "%.0f"|format(extra.total_price) }}</span>
+                    </div>
+                    {% endfor %}
+                    <div style="display:flex; justify-content:space-between; font-size:13px; font-weight:600; margin-top:6px;">
+                        <span>Extras Total</span>
+                        <span style="font-family:monospace;">PKR {{ "%.0f"|format(extra_total) }}</span>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Services Select Card -->
+    <div class="card">
+        <div class="card-head">
+            <div class="card-title">
+                <i class="ti ti-tools" aria-hidden="true"></i> Select Services Used
+            </div>
+        </div>
+        
+        <form action="{{ url_for('reservations.checkout_reservation', id=booking.booking_id) }}" method="POST">
+            <input type="hidden" name="checkout_date" value="{{ checkout_date.strftime('%Y-%m-%d') }}">
+            
+            <p style="font-size: 13px; color: var(--color-text-secondary); margin-bottom: 16px;">
+                Check any add-on services or restaurant catalog items ordered during this stay to add to the invoice. If no services were used, leave all items unchecked.
+            </p>
+            
+            <div style="max-height: 350px; overflow-y: auto; padding-right: 8px; display:flex; flex-direction:column; gap:16px; margin-bottom:20px; border:1px solid #e2e8f0; border-radius:var(--border-radius-md); padding:12px; background:var(--color-background-secondary);">
+                {% for category in service_catalog %}
+                <div>
+                    <div style="font-size: 11px; font-weight:700; text-transform:uppercase; color:var(--color-text-secondary); margin-bottom:8px; border-bottom:1px solid #cbd5e1; padding-bottom:4px;">
+                        {{ category.name }}
+                    </div>
+                    
+                    <div style="display:flex; flex-direction:column; gap:8px;">
+                        {% for item in category.items %}
+                        <div style="display:flex; align-items:center; justify-content:space-between; padding:6px; background:#ffffff; border-radius:6px; border:1px solid #e2e8f0;">
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                <input type="checkbox" name="services" value="{{ item.service_item_id }}" id="svc-{{ item.service_item_id }}" class="svc-cb" data-price="{{ item.unit_price }}">
+                                <label for="svc-{{ item.service_item_id }}" style="font-size:13px; font-weight:500; margin-bottom:0; cursor:pointer;">
+                                    {{ item.item_name }} <span style="color:var(--color-text-secondary); font-size:11px;">(PKR {{ "%.0f"|format(item.unit_price) }})</span>
+                                </label>
+                            </div>
+                            <div style="display:flex; align-items:center; gap:6px;">
+                                <span style="font-size:11px; color:var(--color-text-tertiary);">Qty:</span>
+                                <input type="number" name="qty_{{ item.service_item_id }}" value="1" min="1" style="width:50px; padding:2px 4px; font-size:12px; border-radius:4px; border:1px solid #cbd5e1; text-align:center;" class="svc-qty" disabled>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% else %}
+                <div style="font-size:13px; color:var(--color-text-secondary); text-align:center; padding:16px;">
+                    No services defined in catalog.
+                </div>
+                {% endfor %}
+            </div>
+            
+            <div style="border-top:1px solid #e2e8f0; padding-top:16px; display:flex; flex-direction:column; gap:10px;">
+                <div style="display:flex; justify-content:space-between; font-weight:700; font-size:15px;">
+                    <span>Estimated Bill Subtotal</span>
+                    <span style="color:var(--color-accent-primary); font-family:monospace;" id="est-subtotal">PKR {{ "%.0f"|format(room_total + extra_total) }}</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; font-size:12px; color:var(--color-text-secondary);">
+                    <span>Estimated Tax (16% GST)</span>
+                    <span style="font-family:monospace;" id="est-tax">PKR {{ "%.0f"|format((room_total + extra_total) * 0.16) }}</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; font-weight:700; font-size:17px; border-top:1px solid #f1f5f9; padding-top:8px;">
+                    <span>Estimated Grand Total</span>
+                    <span style="color:var(--color-accent-primary); font-family:monospace;" id="est-total">PKR {{ "%.0f"|format((room_total + extra_total) * 1.16) }}</span>
+                </div>
+            </div>
+            
+            <div style="margin-top:20px; display:flex; justify-content:flex-end;">
+                <button type="submit" class="btn-success" style="padding:10px 24px; font-size:13px; width:100%;">
+                    <i class="ti ti-circle-check" aria-hidden="true"></i> Confirm Checkout & Generate Invoice
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const checkboxes = document.querySelectorAll('.svc-cb');
+        const estSubtotalElem = document.getElementById('est-subtotal');
+        const estTaxElem = document.getElementById('est-tax');
+        const estTotalElem = document.getElementById('est-total');
+        
+        const baseSubtotal = parseFloat("{{ room_total + extra_total }}");
+        
+        function updateEstimates() {
+            let serviceSubtotal = 0;
+            checkboxes.forEach(cb => {
+                const qtyInput = cb.closest('div').nextElementSibling.querySelector('.svc-qty');
+                if (cb.checked) {
+                    qtyInput.disabled = false;
+                    const price = parseFloat(cb.getAttribute('data-price')) || 0;
+                    const qty = parseInt(qtyInput.value) || 1;
+                    serviceSubtotal += price * qty;
+                } else {
+                    qtyInput.disabled = true;
+                }
+            });
+            
+            const newSubtotal = baseSubtotal + serviceSubtotal;
+            const newTax = newSubtotal * 0.16;
+            const newTotal = newSubtotal + newTax;
+            
+            estSubtotalElem.textContent = 'PKR ' + Math.round(newSubtotal).toLocaleString();
+            estTaxElem.textContent = 'PKR ' + Math.round(newTax).toLocaleString();
+            estTotalElem.textContent = 'PKR ' + Math.round(newTotal).toLocaleString();
+        }
+        
+        checkboxes.forEach(cb => {
+            cb.addEventListener('change', updateEstimates);
+            const qtyInput = cb.closest('div').nextElementSibling.querySelector('.svc-qty');
+            qtyInput.addEventListener('input', updateEstimates);
+        });
+    });
+</script>
+{% endblock %}
