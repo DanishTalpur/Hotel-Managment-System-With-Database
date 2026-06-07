@@ -26,6 +26,7 @@ def create_app():
     from routers.services import services_router
     from routers.extras import extras_router
     from routers.rates import rates_router
+    from routers.db_viewer import db_viewer_router
     
     app.register_blueprint(dashboard_router)
     app.register_blueprint(guests_router)
@@ -35,5 +36,6 @@ def create_app():
     app.register_blueprint(services_router)
     app.register_blueprint(extras_router)
     app.register_blueprint(rates_router)
+    app.register_blueprint(db_viewer_router)
     
     return app

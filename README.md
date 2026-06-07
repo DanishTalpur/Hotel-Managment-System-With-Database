@@ -334,11 +334,29 @@ git pull   # if using git
 
 ---
 
-## Show Your Teacher the Database (Live Demo)
+## Showing the Database (Live Demo)
 
-The app uses a real SQLite file: **`instance/hotel.db`**. Every form action writes to it.
+### Best option — Live DB Viewer (built into the app)
 
-### Option A — PythonAnywhere Files + DB Browser (best for presentation)
+Open **Live DB Viewer** in the sidebar (or go to `/database`).
+
+1. Open **two browser tabs**:
+   - Tab 1: `Guests` or `Reservations` (use the app normally)
+   - Tab 2: **Live DB Viewer** (`/database`)
+2. Enable **Auto-refresh (3s)** — table row counts update automatically
+3. When you add a guest, the `customer` count increases within 3 seconds
+4. Click any table to browse the latest 50 rows
+5. Run **SELECT** queries in the query box (read-only, safe for demo)
+
+Works on **localhost** and **PythonAnywhere** — no file download needed.
+
+**Demo script for your teacher:**
+1. Show `customer` table with current row count
+2. Add a new guest in the other tab
+3. Switch back — count increases, new row appears
+4. Run: `SELECT COUNT(*) FROM customer`
+
+### Option B — DB Browser for SQLite (offline file)
 
 1. On PythonAnywhere **Files** tab, open `StayDesk/instance/hotel.db`
 2. Click **Download**
@@ -371,12 +389,6 @@ SELECT invoice_id, total_amount, payment_status FROM invoice;
 
 Run a `SELECT` before and after adding a guest — the new row appears immediately.
 
-### Option C — Download + side-by-side (classroom setup)
-
-1. **Left screen:** Live site at `https://YOUR_USERNAME.pythonanywhere.com`
-2. **Right screen:** DB Browser with `hotel.db` (re-download after each step)
-
-Tell your teacher: *"This is not mock data — Flask writes to SQLite via SQLAlchemy on every submit."*
 
 ### One-line proof query (after adding a guest)
 

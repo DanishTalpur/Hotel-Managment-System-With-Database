@@ -228,6 +228,12 @@
                 <i class="ti ti-star" aria-hidden="true"></i>
                 <span>Extras</span>
             </a>
+
+            <div class="nav-section">Database</div>
+            <a href="{{ url_for('db_viewer.database_viewer') }}" class="nav-item {% if active == 'database' %}active{% endif %}">
+                <i class="ti ti-database" aria-hidden="true"></i>
+                <span>Live DB Viewer</span>
+            </a>
         </div>
         
         <!-- Main Content Area -->

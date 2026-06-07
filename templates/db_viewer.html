@@ -1,0 +1,193 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="topbar">
+    <div>
+        <div class="page-title">Live Database Viewer</div>
+        <div class="page-sub">Real-time SQLite data — refreshes as you use the app</div>
+    </div>
+    <div class="top-actions" style="gap: 10px;">
+        <label style="display:flex; align-items:center; gap:8px; font-size:13px; color:var(--color-text-secondary); cursor:pointer;">
+            <input type="checkbox" id="auto-refresh" checked style="width:16px; height:16px;">
+            Auto-refresh (3s)
+        </label>
+        <button type="button" class="btn-outline btn-sm" id="refresh-btn">
+            <i class="ti ti-refresh"></i> Refresh now
+        </button>
+        <span id="last-updated" style="font-size:11px; color:var(--color-text-tertiary);"></span>
+    </div>
+</div>
+
+<div class="card" style="margin-bottom:16px; background:#eff6ff; border-color:#93c5fd;">
+    <div style="font-size:13px; color:#1e40af; display:flex; align-items:center; gap:8px;">
+        <i class="ti ti-info-circle"></i>
+        <span>Open this page in a <strong>second browser tab</strong> beside Guests / Reservations. Add data in one tab — watch rows appear here instantly. Read-only SELECT queries only.</span>
+    </div>
+</div>
+
+<div class="two-col" style="grid-template-columns: 260px 1fr;">
+    <div class="card" style="padding:0; overflow:hidden;">
+        <div style="padding:14px 16px; border-bottom:1px solid #e2e8f0; font-weight:700; font-size:13px;">
+            <i class="ti ti-database" style="color:var(--color-accent-primary);"></i> Tables
+        </div>
+        <div id="table-list" style="max-height:520px; overflow-y:auto;"></div>
+    </div>
+
+    <div class="stack">
+        <div class="card">
+            <div class="card-head" style="margin-bottom:12px;">
+                <div class="card-title"><i class="ti ti-table"></i> <span id="viewing-table">Select a table</span></div>
+            </div>
+            <div class="table-container" id="table-data-wrap">
+                <p style="color:var(--color-text-secondary); font-size:13px; padding:20px;">Click a table on the left to browse live rows.</p>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-head" style="margin-bottom:12px;">
+                <div class="card-title"><i class="ti ti-terminal-2"></i> Run SQL Query</div>
+            </div>
+            <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px;">
+                {% for label, sql in preset_queries %}
+                <button type="button" class="btn-outline btn-sm preset-query" data-sql="{{ sql }}">{{ label }}</button>
+                {% endfor %}
+            </div>
+            <textarea id="sql-input" rows="3" style="width:100%; font-family:monospace; font-size:12px; padding:10px; border:1px solid #cbd5e1; border-radius:8px; margin-bottom:10px;" placeholder="SELECT * FROM customer LIMIT 5;">SELECT customer_id, first_name, last_name, email FROM customer ORDER BY customer_id DESC LIMIT 5</textarea>
+            <button type="button" class="btn-primary btn-sm" id="run-query-btn">
+                <i class="ti ti-player-play"></i> Run SELECT
+            </button>
+            <div id="query-error" style="color:#dc2626; font-size:12px; margin-top:8px; display:none;"></div>
+            <div class="table-container" id="query-result-wrap" style="margin-top:14px;"></div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function() {
+    const tableList = document.getElementById('table-list');
+    const tableDataWrap = document.getElementById('table-data-wrap');
+    const viewingTable = document.getElementById('viewing-table');
+    const lastUpdated = document.getElementById('last-updated');
+    const autoRefresh = document.getElementById('auto-refresh');
+    const refreshBtn = document.getElementById('refresh-btn');
+    const sqlInput = document.getElementById('sql-input');
+    const runQueryBtn = document.getElementById('run-query-btn');
+    const queryResultWrap = document.getElementById('query-result-wrap');
+    const queryError = document.getElementById('query-error');
+
+    let selectedTable = null;
+    let prevCounts = {};
+    let refreshTimer = null;
+
+    function renderTable(data, targetEl, title) {
+        if (!data.rows || data.rows.length === 0) {
+            targetEl.innerHTML = '<p style="color:var(--color-text-secondary); font-size:13px; padding:16px;">No rows found.</p>';
+            return;
+        }
+        const cols = data.columns;
+        let html = '<table class="tbl"><thead><tr>';
+        cols.forEach(c => { html += `<th>${c}</th>`; });
+        html += '</tr></thead><tbody>';
+        data.rows.forEach(row => {
+            html += '<tr>';
+            cols.forEach(c => {
+                const val = row[c] === null ? '<em style="color:#94a3b8;">NULL</em>' : String(row[c]);
+                html += `<td style="font-size:12px; font-family:monospace;">${val}</td>`;
+            });
+            html += '</tr>';
+        });
+        html += '</tbody></table>';
+        if (title) {
+            html = `<div style="font-size:11px; color:var(--color-text-secondary); margin-bottom:8px;">${title} — ${data.rows.length} row(s)</div>` + html;
+        }
+        targetEl.innerHTML = html;
+    }
+
+    async function loadTableCounts() {
+        const res = await fetch('/database/api/tables');
+        const data = await res.json();
+        let html = '';
+        Object.entries(data.tables).sort().forEach(([name, count]) => {
+            const changed = prevCounts[name] !== undefined && prevCounts[name] !== count;
+            const active = selectedTable === name ? 'background:#eff6ff; border-left:3px solid #1d4ed8;' : '';
+            const pulse = changed ? 'animation:pulse 0.6s ease;' : '';
+            html += `<button type="button" class="table-pick" data-table="${name}" style="display:flex; justify-content:space-between; width:100%; padding:10px 16px; border:none; border-bottom:1px solid #f1f5f9; background:transparent; cursor:pointer; text-align:left; font-size:12px; ${active} ${pulse}">
+                <span style="font-weight:600;">${name}</span>
+                <span class="table-count" data-table="${name}" style="background:#f1f5f9; padding:2px 8px; border-radius:999px; font-weight:700; color:var(--color-accent-primary);">${count}</span>
+            </button>`;
+            prevCounts[name] = count;
+        });
+        tableList.innerHTML = html;
+        tableList.querySelectorAll('.table-pick').forEach(btn => {
+            btn.addEventListener('click', () => loadTableData(btn.dataset.table));
+        });
+        lastUpdated.textContent = 'Updated ' + new Date().toLocaleTimeString();
+    }
+
+    async function loadTableData(name) {
+        selectedTable = name;
+        viewingTable.textContent = name;
+        const res = await fetch(`/database/api/table/${name}`);
+        const data = await res.json();
+        renderTable(data, tableDataWrap, `Latest rows from ${name}`);
+        loadTableCounts();
+    }
+
+    async function runQuery() {
+        queryError.style.display = 'none';
+        const res = await fetch('/database/api/query', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ sql: sqlInput.value })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+            queryError.textContent = data.error || 'Query failed';
+            queryError.style.display = 'block';
+            queryResultWrap.innerHTML = '';
+            return;
+        }
+        renderTable(data, queryResultWrap, 'Query result');
+    }
+
+    function scheduleRefresh() {
+        if (refreshTimer) clearInterval(refreshTimer);
+        if (autoRefresh.checked) {
+            refreshTimer = setInterval(async () => {
+                await loadTableCounts();
+                if (selectedTable) {
+                    const res = await fetch(`/database/api/table/${selectedTable}`);
+                    const data = await res.json();
+                    renderTable(data, tableDataWrap, `Latest rows from ${selectedTable}`);
+                }
+            }, 3000);
+        }
+    }
+
+    refreshBtn.addEventListener('click', async () => {
+        await loadTableCounts();
+        if (selectedTable) loadTableData(selectedTable);
+    });
+    autoRefresh.addEventListener('change', scheduleRefresh);
+    runQueryBtn.addEventListener('click', runQuery);
+    document.querySelectorAll('.preset-query').forEach(btn => {
+        btn.addEventListener('click', () => {
+            sqlInput.value = btn.dataset.sql;
+            runQuery();
+        });
+    });
+
+    loadTableCounts().then(() => loadTableData('customer'));
+    scheduleRefresh();
+})();
+</script>
+<style>
+@keyframes pulse {
+    0% { background: #dcfce7; }
+    100% { background: transparent; }
+}
+.table-pick:hover { background: var(--color-background-secondary) !important; }
+</style>
+{% endblock %}
