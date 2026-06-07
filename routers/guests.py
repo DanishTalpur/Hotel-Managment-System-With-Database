@@ -61,10 +61,9 @@ def add_guest():
         return redirect(url_for('guests.guests_screen'))
         
     # 2. Phone validation: exactly 11 digits, numbers only
-    if phone:
-        if len(phone) != 11 or not phone.isdigit():
-            flash('Phone number must be exactly 11 digits long and contain only numbers.', 'error')
-            return redirect(url_for('guests.guests_screen'))
+    if not phone or len(phone) != 11 or not phone.isdigit():
+        flash('Phone number must be exactly 11 digits long and contain only numbers.', 'error')
+        return redirect(url_for('guests.guests_screen'))
             
     # 3. CNIC validation: exactly 13 digits, numbers only
     if id_type == 'CNIC':

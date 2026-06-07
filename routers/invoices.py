@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
-from models import Invoice, Booking, BookingRoom, Stay, Customer, Room, BookingRoomExtra, Extra
+from models import Invoice, Booking, BookingRoom, Stay, Customer, Room, BookingRoomExtra, Extra, Payment
 from database import db
 from datetime import datetime, date
 
@@ -68,12 +68,23 @@ def invoices_screen():
 @invoices_router.route('/invoices/mark_paid/<int:id>')
 def mark_paid(id):
     invoice = Invoice.query.get_or_404(id)
+    remaining = invoice.total_amount - invoice.paid_amount
+    if remaining > 0:
+        payment = Payment(
+            invoice_id=invoice.invoice_id,
+            payment_date=datetime.now(),
+            amount=remaining,
+            payment_method='Cash',
+            reference_number=None,
+            notes='Full payment recorded from invoice screen'
+        )
+        db.session.add(payment)
     invoice.payment_status = 'paid'
     invoice.paid_amount = invoice.total_amount
     db.session.commit()
-    
+
     flash('Invoice marked as paid!', 'success')
-    return redirect(url_for('invoices.invoices_screen'))
+    return redirect(url_for('invoices.invoice_detail', id=id))
 
 @invoices_router.route('/invoices/<int:id>')
 def invoice_detail(id):
@@ -147,6 +158,8 @@ def invoice_detail(id):
                             'total_price': extra.price * bre.quantity
                         })
     
+    payments = Payment.query.filter_by(invoice_id=id).order_by(Payment.payment_date.desc()).all()
+
     return render_template(
         'invoices.html',
         active='invoices',
@@ -157,6 +170,7 @@ def invoice_detail(id):
         stay_charges=stay_charges,
         service_charges=service_charges,
         extra_charges=extra_charges,
+        payments=payments,
         view_detail=True
     )
 
@@ -257,12 +271,32 @@ def generate_invoice(booking_id):
 def partial_payment(id):
     invoice = Invoice.query.get_or_404(id)
     amount = float(request.form['payment_amount'])
-    
+    payment_method = request.form.get('payment_method', 'Cash').strip() or 'Cash'
+    reference_number = request.form.get('reference_number', '').strip() or None
+
+    if amount <= 0:
+        flash('Payment amount must be greater than zero.', 'error')
+        return redirect(url_for('invoices.invoice_detail', id=id))
+
+    balance_due = invoice.total_amount - invoice.paid_amount
+    if amount > balance_due:
+        amount = balance_due
+
+    payment = Payment(
+        invoice_id=invoice.invoice_id,
+        payment_date=datetime.now(),
+        amount=amount,
+        payment_method=payment_method,
+        reference_number=reference_number,
+        notes='Partial payment recorded from invoice screen'
+    )
+    db.session.add(payment)
+
     invoice.paid_amount += amount
     if invoice.paid_amount >= invoice.total_amount:
         invoice.payment_status = 'paid'
         invoice.paid_amount = invoice.total_amount
-    
+
     db.session.commit()
     flash('Payment recorded successfully!', 'success')
     return redirect(url_for('invoices.invoice_detail', id=id))

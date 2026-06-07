@@ -1,9 +1,22 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
-from models import Booking, BookingRoom, Customer, Room, Rate, RoomType, Invoice, Stay, BookingRoomExtra, Extra
+from models import Booking, BookingRoom, Customer, Room, Rate, RoomType, Invoice, Stay, StayService, BookingRoomExtra, Extra
 from database import db
 from datetime import datetime, date, timedelta
 
 reservations_router = Blueprint('reservations', __name__)
+
+
+def _room_has_date_conflict(room_id, checkin, checkout, exclude_booking_id=None):
+    """Return True if the room already has an overlapping booked/checked-in reservation."""
+    query = BookingRoom.query.join(Booking).filter(
+        BookingRoom.room_id == room_id,
+        Booking.status.in_(['booked', 'checked_in']),
+        Booking.planned_checkin < checkout,
+        Booking.planned_checkout > checkin,
+    )
+    if exclude_booking_id:
+        query = query.filter(Booking.booking_id != exclude_booking_id)
+    return query.first() is not None
 
 @reservations_router.route('/reservations')
 def reservations_screen():
@@ -144,8 +157,17 @@ def add_reservation():
         
     # 2. Room availability check
     room = Room.query.get(room_id)
-    if not room or room.status != 'available':
-        flash('The selected room is no longer available.', 'error')
+    if not room:
+        flash('The selected room was not found.', 'error')
+        return redirect(url_for('reservations.reservations_screen'))
+    if room.status in ('maintenance', 'blocked'):
+        flash('The selected room is not available for booking.', 'error')
+        return redirect(url_for('reservations.reservations_screen'))
+    if _room_has_date_conflict(room_id, planned_checkin, planned_checkout):
+        flash('The selected room is already reserved for overlapping dates.', 'error')
+        return redirect(url_for('reservations.reservations_screen'))
+    if status == 'checked_in' and room.status != 'available':
+        flash('The selected room is not available for immediate check-in.', 'error')
         return redirect(url_for('reservations.reservations_screen'))
         
     # Create booking
@@ -181,12 +203,10 @@ def add_reservation():
         )
         db.session.add(booking_room_extra)
         
-    # Update room status
+    # Update room status only on immediate check-in
     if status == 'checked_in':
         room.status = 'occupied'
         booking.actual_checkin = date.today()
-    elif status == 'booked':
-        room.status = 'occupied'  # Reserve the room
     
     db.session.commit()
     
@@ -196,39 +216,58 @@ def add_reservation():
 @reservations_router.route('/reservations/delete/<int:id>', methods=['POST'])
 def delete_reservation(id):
     booking = Booking.query.get_or_404(id)
-    
-    # Free up any rooms associated with this booking
-    for br in booking.booking_rooms:
-        room = Room.query.get(br.room_id)
-        if room and room.status in ['occupied', 'checkout']:
-            room.status = 'available'
-        
-        # Delete booking room
-        db.session.delete(br)
-    
-    # Delete associated invoice
+
+    # Delete associated invoice (cascades to snapshots and payments)
     invoice = Invoice.query.filter_by(booking_id=id).first()
     if invoice:
         db.session.delete(invoice)
-    
+
+    # Free up rooms and remove related records
+    for br in booking.booking_rooms:
+        for stay in list(br.stays):
+            for ss in list(stay.stay_services):
+                db.session.delete(ss)
+            db.session.delete(stay)
+
+        for bre in BookingRoomExtra.query.filter_by(booking_room_id=br.booking_room_id).all():
+            db.session.delete(bre)
+
+        room = Room.query.get(br.room_id)
+        if room and room.status in ['occupied', 'checkout']:
+            room.status = 'available'
+
+        db.session.delete(br)
+
     db.session.delete(booking)
     db.session.commit()
-    
+
     flash('Reservation deleted successfully!', 'success')
     return redirect(url_for('reservations.reservations_screen'))
 
 @reservations_router.route('/reservations/checkin/<int:id>', methods=['POST'])
 def checkin_reservation(id):
     booking = Booking.query.get_or_404(id)
+
+    if not booking.booking_rooms:
+        flash('No room associated with this booking.', 'error')
+        return redirect(url_for('reservations.reservations_screen'))
+
+    br = booking.booking_rooms[0]
+    room = Room.query.get(br.room_id)
+    if not room:
+        flash('Assigned room was not found.', 'error')
+        return redirect(url_for('reservations.reservations_screen'))
+    if room.status != 'available':
+        flash('Assigned room is not available for check-in.', 'error')
+        return redirect(url_for('reservations.reservations_screen'))
+    if _room_has_date_conflict(br.room_id, booking.planned_checkin, booking.planned_checkout, exclude_booking_id=id):
+        flash('Another reservation conflicts with this room for the selected dates.', 'error')
+        return redirect(url_for('reservations.reservations_screen'))
+
     booking.status = 'checked_in'
     booking.actual_checkin = date.today()
-    
-    # Update room status
-    for br in booking.booking_rooms:
-        room = Room.query.get(br.room_id)
-        if room:
-            room.status = 'occupied'
-    
+    room.status = 'occupied'
+
     db.session.commit()
     flash('Guest checked in successfully!', 'success')
     return redirect(url_for('reservations.reservations_screen'))
@@ -290,7 +329,7 @@ def checkout_screen(id):
         if items:
             service_catalog.append({
                 'name': cat.category_name,
-                'items': items
+                'service_items': items
             })
             
     return render_template(

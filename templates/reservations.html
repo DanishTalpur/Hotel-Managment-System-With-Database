@@ -104,18 +104,18 @@
                         <div style="display: flex; gap: 4px; justify-content: center; align-items: center;">
                             {% if booking_data.booking.status == 'booked' %}
                             <form method="POST" action="{{ url_for('reservations.checkin_reservation', id=booking_data.booking.booking_id) }}" style="display:inline;">
-                                <button type="submit" class="icon-btn" title="Check-in" style="color:#16a34a;">
+                                <button type="submit" class="icon-btn checkin" title="Check-in">
                                     <i class="ti ti-login" aria-hidden="true"></i>
                                 </button>
                             </form>
                             {% endif %}
                             {% if booking_data.booking.status == 'checked_in' %}
-                            <a href="{{ url_for('reservations.checkout_screen', id=booking_data.booking.booking_id) }}" class="icon-btn" title="Check-out" style="color:#b45309;">
+                            <a href="{{ url_for('reservations.checkout_screen', id=booking_data.booking.booking_id) }}" class="icon-btn checkout" title="Check-out">
                                 <i class="ti ti-logout" aria-hidden="true"></i>
                             </a>
                             {% endif %}
                             {% if booking_data.booking.status in ['checkout', 'checked_out'] and booking_data.invoice_id %}
-                            <a href="{{ url_for('invoices.invoice_detail', id=booking_data.invoice_id) }}" class="icon-btn" title="View Invoice" style="color:var(--color-accent-primary);">
+                            <a href="{{ url_for('invoices.invoice_detail', id=booking_data.invoice_id) }}" class="icon-btn invoice" title="View Invoice">
                                 <i class="ti ti-receipt" aria-hidden="true"></i>
                             </a>
                             {% endif %}

@@ -11,18 +11,21 @@ from models import (
 )
 from datetime import datetime, date, timedelta
 import os
+import sys
 
 app = create_app()
 
-def init_database():
-    """Initialize database with tables and sample data"""
+def init_database(force=False):
+    """Initialize database with tables and sample data."""
     with app.app_context():
-        # Create all tables
+        if force:
+            print("Resetting database...")
+            db.drop_all()
+
         db.create_all()
-        
-        # Check if data already exists
-        if RoomType.query.first() is not None:
-            print("Database already initialized.")
+
+        if not force and RoomType.query.first() is not None:
+            print("Database already initialized. Run with --reset to rebuild.")
             return
         
         print("Initializing database with sample data...")
@@ -162,18 +165,18 @@ def init_database():
         db.session.add_all(rates)
         db.session.commit()
         
-        # === Customers ===
+        # === Customers (valid Gmail, 11-digit phone, 13-digit CNIC where applicable) ===
         customers = [
-            Customer(first_name='Ahmed', last_name='Khan', email='ahmed.khan@email.com', phone='0300-1234567', id_type='CNIC', id_number='42101-1234567-1', created_at=date.today() - timedelta(days=60)),
-            Customer(first_name='Fatima', last_name='Ali', email='fatima.ali@email.com', phone='0300-2345678', id_type='CNIC', id_number='42101-2345678-2', created_at=date.today() - timedelta(days=45)),
-            Customer(first_name='Hassan', last_name='Raza', email='hassan.raza@email.com', phone='0300-3456789', id_type='Passport', id_number='AB1234567', created_at=date.today() - timedelta(days=30)),
-            Customer(first_name='Ayesha', last_name='Malik', email='ayesha.malik@email.com', phone='0300-4567890', id_type='CNIC', id_number='42101-4567890-4', created_at=date.today() - timedelta(days=15)),
-            Customer(first_name='Usman', last_name='Shah', email='usman.shah@email.com', phone='0300-5678901', id_type='CNIC', id_number='42101-5678901-5', created_at=date.today() - timedelta(days=10)),
-            Customer(first_name='Sara', last_name='Ahmed', email='sara.ahmed@email.com', phone='0300-6789012', id_type='CNIC', id_number='42101-6789012-6', created_at=date.today() - timedelta(days=5)),
-            Customer(first_name='Bilal', last_name='Hussain', email='bilal.hussain@email.com', phone='0300-7890123', id_type='Passport', id_number='CD9876543', created_at=date.today() - timedelta(days=90)),
-            Customer(first_name='Maria', last_name='Joseph', email='maria.joseph@email.com', phone='0300-8901234', id_type='CNIC', id_number='42101-8901234-8', created_at=date.today() - timedelta(days=75)),
-            Customer(first_name='Tariq', last_name='Mahmood', email='tariq.mahmood@email.com', phone='0300-9012345', id_type='CNIC', id_number='42101-9012345-9', created_at=date.today() - timedelta(days=120)),
-            Customer(first_name='Nadia', last_name='Siddiqui', email='nadia.siddiqui@email.com', phone='0300-0123456', id_type='CNIC', id_number='42101-0123456-0', created_at=date.today() - timedelta(days=20)),
+            Customer(first_name='Ahmed', last_name='Khan', email='ahmed.khan@gmail.com', phone='03001234567', id_type='CNIC', id_number='4210112345671', created_at=date.today() - timedelta(days=60)),
+            Customer(first_name='Fatima', last_name='Ali', email='fatima.ali@gmail.com', phone='03002345678', id_type='CNIC', id_number='4210123456782', created_at=date.today() - timedelta(days=45)),
+            Customer(first_name='Hassan', last_name='Raza', email='hassan.raza@gmail.com', phone='03003456789', id_type='Passport', id_number='AB1234567', created_at=date.today() - timedelta(days=30)),
+            Customer(first_name='Ayesha', last_name='Malik', email='ayesha.malik@gmail.com', phone='03004567890', id_type='CNIC', id_number='4210145678904', created_at=date.today() - timedelta(days=15)),
+            Customer(first_name='Usman', last_name='Shah', email='usman.shah@gmail.com', phone='03005678901', id_type='CNIC', id_number='4210156789015', created_at=date.today() - timedelta(days=10)),
+            Customer(first_name='Sara', last_name='Ahmed', email='sara.ahmed@gmail.com', phone='03006789012', id_type='CNIC', id_number='4210167890126', created_at=date.today() - timedelta(days=5)),
+            Customer(first_name='Bilal', last_name='Hussain', email='bilal.hussain@gmail.com', phone='03007890123', id_type='Passport', id_number='CD9876543', created_at=date.today() - timedelta(days=90)),
+            Customer(first_name='Maria', last_name='Joseph', email='maria.joseph@gmail.com', phone='03008901234', id_type='CNIC', id_number='4210189012348', created_at=date.today() - timedelta(days=75)),
+            Customer(first_name='Tariq', last_name='Mahmood', email='tariq.mahmood@gmail.com', phone='03009012345', id_type='CNIC', id_number='4210190123459', created_at=date.today() - timedelta(days=120)),
+            Customer(first_name='Nadia', last_name='Siddiqui', email='nadia.siddiqui@gmail.com', phone='03000123456', id_type='CNIC', id_number='4210101234560', created_at=date.today() - timedelta(days=20)),
         ]
         db.session.add_all(customers)
         db.session.commit()
@@ -185,7 +188,7 @@ def init_database():
             Booking(customer_id=3, planned_checkin=today + timedelta(days=1), planned_checkout=today + timedelta(days=5), status='booked', booking_source='Corporate', created_at=datetime.now() - timedelta(days=10)),
             Booking(customer_id=4, planned_checkin=today + timedelta(days=3), planned_checkout=today + timedelta(days=7), status='booked', booking_source='Online', created_at=datetime.now() - timedelta(days=5)),
             Booking(customer_id=5, planned_checkin=today - timedelta(days=10), planned_checkout=today - timedelta(days=3), actual_checkin=today - timedelta(days=10), actual_checkout=today - timedelta(days=3), status='checked_out', booking_source='Walk-in', created_at=datetime.now() - timedelta(days=20)),
-            Booking(customer_id=6, planned_checkin=today - timedelta(days=7), planned_checkout=today, actual_checkin=today - timedelta(days=7), status='checkout', booking_source='Online', created_at=datetime.now() - timedelta(days=14)),
+            Booking(customer_id=6, planned_checkin=today - timedelta(days=7), planned_checkout=today, actual_checkin=today - timedelta(days=7), actual_checkout=today, status='checkout', booking_source='Online', created_at=datetime.now() - timedelta(days=14)),
             Booking(customer_id=7, planned_checkin=today + timedelta(days=5), planned_checkout=today + timedelta(days=10), status='booked', booking_source='Corporate', created_at=datetime.now() - timedelta(days=3)),
             Booking(customer_id=8, planned_checkin=today - timedelta(days=15), planned_checkout=today - timedelta(days=10), actual_checkin=today - timedelta(days=15), actual_checkout=today - timedelta(days=10), status='checked_out', booking_source='Direct', created_at=datetime.now() - timedelta(days=30)),
         ]
@@ -223,16 +226,16 @@ def init_database():
 
         # === Booking Room Extras ===
         booking_room_extras = [
-            BookingRoomExtra(booking_room_id=1, extra_id=1, quantity=1),
-            BookingRoomExtra(booking_room_id=1, extra_id=3, quantity=1),
-            BookingRoomExtra(booking_room_id=2, extra_id=2, quantity=1),
-            BookingRoomExtra(booking_room_id=2, extra_id=4, quantity=1),
-            BookingRoomExtra(booking_room_id=3, extra_id=1, quantity=1),
-            BookingRoomExtra(booking_room_id=4, extra_id=1, quantity=1),
-            BookingRoomExtra(booking_room_id=4, extra_id=5, quantity=1),
-            BookingRoomExtra(booking_room_id=5, extra_id=6, quantity=1),
-            BookingRoomExtra(booking_room_id=6, extra_id=2, quantity=1),
-            BookingRoomExtra(booking_room_id=7, extra_id=1, quantity=1),
+            BookingRoomExtra(booking_room_id=1, extra_id=1, quantity=1, source='booking'),
+            BookingRoomExtra(booking_room_id=1, extra_id=3, quantity=1, source='booking'),
+            BookingRoomExtra(booking_room_id=2, extra_id=2, quantity=1, source='booking'),
+            BookingRoomExtra(booking_room_id=2, extra_id=4, quantity=1, source='booking'),
+            BookingRoomExtra(booking_room_id=3, extra_id=1, quantity=1, source='booking'),
+            BookingRoomExtra(booking_room_id=4, extra_id=1, quantity=1, source='booking'),
+            BookingRoomExtra(booking_room_id=4, extra_id=5, quantity=1, source='booking'),
+            BookingRoomExtra(booking_room_id=5, extra_id=6, quantity=1, source='booking'),
+            BookingRoomExtra(booking_room_id=6, extra_id=2, quantity=1, source='booking'),
+            BookingRoomExtra(booking_room_id=7, extra_id=1, quantity=1, source='booking'),
         ]
         db.session.add_all(booking_room_extras)
         db.session.commit()
@@ -279,59 +282,119 @@ def init_database():
                     current_date += timedelta(days=1)
         db.session.add_all(stays)
         db.session.commit()
+
+        # Sync room status with active bookings
+        for br in booking_rooms:
+            booking = Booking.query.get(br.booking_id)
+            room = Room.query.get(br.room_id)
+            if not booking or not room:
+                continue
+            if booking.status == 'checked_in':
+                room.status = 'occupied'
+            elif booking.status in ('checkout', 'checked_out'):
+                room.status = 'checkout'
+        db.session.commit()
+
+        # === Sample stay services for completed bookings ===
+        sample_stay_services = [
+            (5, 1, 2),   # booking_room 5: Sandwich x2
+            (5, 2, 1),   # Coffee x1
+            (8, 1, 1),   # booking_room 8: Sandwich x1
+            (8, 9, 1),   # Dinner x1
+        ]
+        for br_id, service_item_id, quantity in sample_stay_services:
+            stay = Stay.query.filter_by(booking_room_id=br_id).first()
+            service_item = ServiceItem.query.get(service_item_id)
+            if stay and service_item:
+                line_total = service_item.unit_price * quantity
+                db.session.add(StayService(
+                    stay_id=stay.stay_id,
+                    service_item_id=service_item_id,
+                    quantity=quantity,
+                    unit_price=service_item.unit_price,
+                    total_price=line_total,
+                    recorded_at=datetime.now()
+                ))
+        db.session.commit()
         
         # === Invoices ===
-        for booking in bookings:
-            if booking.status in ['checked_out', 'checkout']:
-                # Calculate total from stays
+        completed_bookings = Booking.query.filter(
+            Booking.status.in_(['checked_out', 'checkout'])
+        ).all()
+        for booking in completed_bookings:
                 room_total = 0
+                service_total = 0
+                extra_total = 0
+                bre_items = []
+                logged_services = []
+
                 for br in booking.booking_rooms:
                     for stay in br.stays:
                         room_total += stay.room_charge
-                
-                # Calculate pre-booked extras
-                extra_total = 0
-                bre_items = []
-                for br in booking.booking_rooms:
-                    extras_for_room = BookingRoomExtra.query.filter_by(booking_room_id=br.booking_room_id).all()
+                        for ss in stay.stay_services:
+                            service_total += ss.total_price
+                            logged_services.append(ss)
+
+                    extras_for_room = BookingRoomExtra.query.filter_by(
+                        booking_room_id=br.booking_room_id, source='booking'
+                    ).all()
                     bre_items.extend(extras_for_room)
                     for bre in extras_for_room:
                         extra = Extra.query.get(bre.extra_id)
                         if extra:
                             extra_total += extra.price * bre.quantity
-                
-                subtotal = room_total + extra_total
-                tax_amount = subtotal * 0.16  # 16% tax
+
+                subtotal = room_total + service_total + extra_total
+                tax_amount = subtotal * 0.16
                 total_amount = subtotal + tax_amount
-                
+                is_paid = booking.status == 'checked_out'
+
                 invoice = Invoice(
                     booking_id=booking.booking_id,
                     issued_date=booking.actual_checkout or date.today(),
                     room_total=room_total,
-                    service_total=0.0,
+                    service_total=service_total,
                     extra_total=extra_total,
                     subtotal=subtotal,
                     tax_amount=tax_amount,
                     total_amount=total_amount,
-                    paid_amount=total_amount if booking.status == 'checked_out' else 0,
-                    payment_status='paid' if booking.status == 'checked_out' else 'unpaid'
+                    paid_amount=total_amount if is_paid else 0,
+                    payment_status='paid' if is_paid else 'unpaid'
                 )
                 db.session.add(invoice)
                 db.session.flush()
-                
-                # Snapshot extras
+
                 for bre in bre_items:
                     extra = Extra.query.get(bre.extra_id)
                     if extra:
-                        invoice_extra = InvoiceExtra(
+                        db.session.add(InvoiceExtra(
                             invoice_id=invoice.invoice_id,
                             extra_id=bre.extra_id,
                             extra_name=extra.extra_name,
                             quantity=bre.quantity,
                             unit_price=extra.price,
                             line_total=extra.price * bre.quantity
-                        )
-                        db.session.add(invoice_extra)
+                        ))
+
+                for ss in logged_services:
+                    db.session.add(InvoiceService(
+                        invoice_id=invoice.invoice_id,
+                        service_item_id=ss.service_item_id,
+                        item_name=ss.service_item.item_name if ss.service_item else 'Unknown Service',
+                        quantity=ss.quantity,
+                        unit_price=ss.unit_price,
+                        line_total=ss.total_price
+                    ))
+
+                if is_paid:
+                    db.session.add(Payment(
+                        invoice_id=invoice.invoice_id,
+                        payment_date=datetime.now(),
+                        amount=total_amount,
+                        payment_method='Cash',
+                        reference_number=None,
+                        notes='Seed data: full payment on checkout'
+                    ))
         db.session.commit()
         
         print("Database initialized successfully with sample data!")
@@ -342,10 +405,12 @@ def init_database():
         print(f"  - {len(rates)} rates")
         print(f"  - {len(customers)} customers")
         print(f"  - {len(bookings)} bookings")
+        print(f"  - Database file: instance/hotel.db")
 
 with app.app_context():
     db.create_all()
 
 if __name__ == "__main__":
-    init_database()
+    force_reset = '--reset' in sys.argv
+    init_database(force=force_reset)
     app.run(debug=True)

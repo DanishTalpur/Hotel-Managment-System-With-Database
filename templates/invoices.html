@@ -133,6 +133,19 @@
                 </span>
             </div>
         </div>
+
+        {% if payments %}
+        <div class="receipt-section-header">Payment History</div>
+        {% for payment in payments %}
+        <div class="invoice-item-row">
+            <span style="color:var(--color-text-secondary);">
+                {{ payment.payment_date.strftime('%d %b %Y %H:%M') }} &middot; {{ payment.payment_method }}
+                {% if payment.reference_number %} &middot; Ref: {{ payment.reference_number }}{% endif %}
+            </span>
+            <span style="font-weight:600; color:#15803d; font-family: monospace;">PKR {{ "%.0f"|format(payment.amount) }}</span>
+        </div>
+        {% endfor %}
+        {% endif %}
     </div>
     
     <div class="no-print" style="display:flex; gap:10px; margin-top:20px; border-top: 1px solid #e2e8f0; padding-top:16px;">
@@ -229,7 +242,7 @@
                                 <i class="ti ti-eye" aria-hidden="true"></i>
                             </a>
                             {% if invoice_data.invoice.payment_status == 'unpaid' %}
-                            <a href="{{ url_for('invoices.mark_paid', id=invoice_data.invoice.invoice_id) }}" class="icon-btn" style="color:#16a34a;" title="Mark Paid">
+                            <a href="{{ url_for('invoices.mark_paid', id=invoice_data.invoice.invoice_id) }}" class="icon-btn checkin" title="Mark Paid">
                                 <i class="ti ti-check" aria-hidden="true"></i>
                             </a>
                             {% endif %}

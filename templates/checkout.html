@@ -108,8 +108,8 @@
                     </div>
                     
                     <div style="display:flex; flex-direction:column; gap:8px;">
-                        {% for item in category.items %}
-                        <div style="display:flex; align-items:center; justify-content:space-between; padding:6px; background:#ffffff; border-radius:6px; border:1px solid #e2e8f0;">
+                        {% for item in category.service_items %}
+                        <div style="display:flex; align-items:center; justify-content:space-between; padding:6px; background:#ffffff; border-radius:6px; border:1px solid #e2e8f0;" class="svc-row">
                             <div style="display:flex; align-items:center; gap:8px;">
                                 <input type="checkbox" name="services" value="{{ item.service_item_id }}" id="svc-{{ item.service_item_id }}" class="svc-cb" data-price="{{ item.unit_price }}">
                                 <label for="svc-{{ item.service_item_id }}" style="font-size:13px; font-weight:500; margin-bottom:0; cursor:pointer;">
@@ -169,11 +169,13 @@
         function updateEstimates() {
             let serviceSubtotal = 0;
             checkboxes.forEach(cb => {
-                const qtyInput = cb.closest('div').nextElementSibling.querySelector('.svc-qty');
+                const row = cb.closest('.svc-row');
+                const qtyInput = row ? row.querySelector('.svc-qty') : null;
+                if (!qtyInput) return;
                 if (cb.checked) {
                     qtyInput.disabled = false;
                     const price = parseFloat(cb.getAttribute('data-price')) || 0;
-                    const qty = parseInt(qtyInput.value) || 1;
+                    const qty = parseInt(qtyInput.value, 10) || 1;
                     serviceSubtotal += price * qty;
                 } else {
                     qtyInput.disabled = true;
@@ -191,8 +193,11 @@
         
         checkboxes.forEach(cb => {
             cb.addEventListener('change', updateEstimates);
-            const qtyInput = cb.closest('div').nextElementSibling.querySelector('.svc-qty');
-            qtyInput.addEventListener('input', updateEstimates);
+            const row = cb.closest('.svc-row');
+            const qtyInput = row ? row.querySelector('.svc-qty') : null;
+            if (qtyInput) {
+                qtyInput.addEventListener('input', updateEstimates);
+            }
         });
     });
 </script>
