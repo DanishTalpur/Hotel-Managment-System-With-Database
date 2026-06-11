@@ -10,6 +10,7 @@ A full-stack hotel management web application built with **Python Flask**, **SQL
 |---|---|
 | Danish Talpur | danishshuja11@gmail.com |
 | Naushaba Asif | asifnaushaba8@gmail.com |
+| Rohban Tariq | bscs2412488@szabist.pk |
 ---
 
 ## Project Structure
