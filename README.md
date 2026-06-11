@@ -6,13 +6,9 @@ A full-stack hotel management web application built with **Python Flask**, **SQL
 
 ## Team Members
 
-| Name | Student ID |
+| Name | Gmail |
 |---|---|
-| Rohban Tariq | BSCS2412488 |
-| Naushaba Asif | BSCS2412485 |
-| Sohaib Rafiq | BSCS2412481 |
-| Danish Danish | BSCS2412467 |
-
+| Danish Danish | danishshuja11@gmail.com |
 ---
 
 ## Project Structure
