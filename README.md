@@ -8,7 +8,8 @@ A full-stack hotel management web application built with **Python Flask**, **SQL
 
 | Name | Gmail |
 |---|---|
-| Danish Danish | danishshuja11@gmail.com |
+| Danish Talpur | danishshuja11@gmail.com |
+| Naushaba Asif | asifnaushaba8@gmail.com |
 ---
 
 ## Project Structure
